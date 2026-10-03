@@ -3,69 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Portal - Swamy School</title>
+    <title>Teacher Portal - Swamy English Medium High School</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f6f9; display: flex; flex-direction: column; min-height: 100vh; }
-        .header { background: #6a1b9a; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { font-size: 20px; }
-        .logout-btn { background: #d9534f; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: 600; }
-        .container { flex: 1; max-width: 650px; width: 100%; margin: 30px auto; padding: 0 15px; }
-        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .card h2 { color: #6a1b9a; margin-bottom: 15px; font-size: 20px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+
+        /* Top Header */
+        .school-banner { background: #ffffff; border-bottom: 3px solid #6a1b9a; padding: 15px 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .school-banner h1 { color: #6a1b9a; font-size: 22px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+        .school-banner p { color: #555; font-size: 11px; margin: 2px 0; }
+
+        /* Top Blue Nav Bar */
+        .top-nav { background-color: #6a1b9a; color: white; padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; border-bottom: 1px solid #4a126d; }
+        .top-nav a { color: white; text-decoration: none; margin-left: 15px; cursor: pointer; }
+        .top-nav a:hover { text-decoration: underline; }
+
+        /* Layout Container */
+        .main-layout { display: flex; flex: 1; flex-wrap: wrap; }
+
+        /* Sidebar Menu */
+        .sidebar { width: 240px; background-color: #f8f9fa; border-right: 1px solid #ddd; padding: 10px 0; }
+        .menu-header { background-color: #6a1b9a; color: white; padding: 10px 15px; font-weight: bold; font-size: 13px; text-align: center; margin-bottom: 5px; }
+        .menu-item { display: block; padding: 10px 15px; color: #6a1b9a; text-decoration: none; font-size: 13px; font-weight: 600; border-bottom: 1px solid #eee; }
+        .menu-item.active { background-color: #e9ecef; border-left: 4px solid #6a1b9a; }
+
+        /* Content Area */
+        .content-area { flex: 1; padding: 20px; background-color: #fff; min-width: 300px; }
+        .content-card { background: #fff; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 20px; max-width: 700px; }
+        .content-card h2 { color: #6a1b9a; font-size: 18px; border-bottom: 2px solid #6a1b9a; padding-bottom: 8px; margin-bottom: 15px; text-transform: uppercase; }
+
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-weight: 600; color: #333; margin-bottom: 5px; font-size: 14px; }
-        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
-        .btn { background: #6a1b9a; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; }
+        .form-group label { display: block; font-weight: 600; color: #333; margin-bottom: 5px; font-size: 13px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        .btn { background: #6a1b9a; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }
         .btn:hover { background: #4a126d; }
         .success-msg { color: #28a745; font-weight: 600; margin-top: 10px; text-align: center; display: none; }
+
+        .footer { background: #1e3c72; color: white; text-align: center; padding: 10px; font-size: 11px; }
+
+        @media(max-width: 768px) {
+            .main-layout { flex-direction: column; }
+            .sidebar { width: 100%; }
+        }
     </style>
 
-    <!-- Firebase Compat SDKs -->
+    <!-- Firebase SDK Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
-    <div class="header">
-        <h1>Teacher Portal - Swamy School</h1>
-        <button class="logout-btn" onclick="location.href='../index.html'">Logout</button>
+    <!-- School Header -->
+    <div class="school-banner">
+        <h1>Swamy English Medium High School</h1>
+        <p>Recognized by Govt. of A.P. | L.K.G. to X CLASS</p>
+        <p>Opp. 3 APSP, Anjaneya Nagar, Kakinada - 533 005 | Mob: 98483 50583</p>
     </div>
 
-    <div class="container">
-        <div class="card">
-            <h2>Update Student Record (Cloud Database)</h2>
-            <div class="form-group">
-                <label for="student-id">Enter Student ID (e.g. 51)</label>
-                <input type="text" id="student-id" placeholder="Type ID to fetch/update data" oninput="fetchStudentData()">
-            </div>
-            <div class="form-group">
-                <label for="student-name">Student Name</label>
-                <input type="text" id="student-name" placeholder="Full Name">
-            </div>
-            <div class="form-group">
-                <label for="student-attendance">Attendance</label>
-                <input type="text" id="student-attendance" placeholder="e.g. 95% (Present)">
-            </div>
-            <div class="form-group">
-                <label for="student-marks">Marks / Report</label>
-                <input type="text" id="student-marks" placeholder="e.g. Math: 90, Science: 85">
-            </div>
-            <div class="form-group">
-                <label for="student-fee">Fee Status</label>
-                <input type="text" id="student-fee" placeholder="e.g. Paid / Balance: ₹2,000">
-            </div>
-            <div class="form-group">
-                <label for="student-remarks">Remarks</label>
-                <textarea id="student-remarks" rows="3" placeholder="Teacher notes..."></textarea>
-            </div>
-            <button class="btn" onclick="saveData()">Save Permanently to Cloud</button>
-            <div id="success-msg" class="success-msg">Data successfully saved to cloud!</div>
+    <!-- Top Action Nav -->
+    <div class="top-nav">
+        <span>Teacher Control Panel</span>
+        <div>
+            <a onclick="location.href='../index.html'">Logout</a>
         </div>
     </div>
 
+    <!-- Main Sidebar & Content Container -->
+    <div class="main-layout">
+        <!-- Sidebar Menu -->
+        <div class="sidebar">
+            <div class="menu-header">TEACHER MENU</div>
+            <a href="#" class="menu-item active">STUDENT DATA EDITOR</a>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <div class="content-card">
+                <h2>Manage Student Records (Cloud Sync)</h2>
+                
+                <div class="form-group">
+                    <label for="student-id">Student ID / Username (e.g., 51)</label>
+                    <input type="text" id="student-id" placeholder="Type student ID to fetch or create data" oninput="fetchStudentData()">
+                </div>
+
+                <div class="form-group">
+                    <label for="student-name">Student Name</label>
+                    <input type="text" id="student-name" placeholder="Full name of student">
+                </div>
+
+                <div class="form-group">
+                    <label for="student-marks">Marks / Academic Report Details</label>
+                    <textarea id="student-marks" rows="3" placeholder="Enter subjects and marks breakdown..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="student-attendance">Attendance Status / Percentage</label>
+                    <input type="text" id="student-attendance" placeholder="e.g., Present (96%)">
+                </div>
+
+                <div class="form-group">
+                    <label for="student-fee">Fee Status</label>
+                    <input type="text" id="student-fee" placeholder="e.g., Paid / Balance Due: ₹1,500">
+                </div>
+
+                <div class="form-group">
+                    <label for="student-remarks">Teacher Remarks</label>
+                    <textarea id="student-remarks" rows="2" placeholder="Enter remarks or feedback..."></textarea>
+                </div>
+
+                <button class="btn" onclick="saveData()">Save Changes Permanently to Cloud</button>
+                <div id="success-msg" class="success-msg">Data successfully saved and updated for student login!</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Copyright &copy; Swamy English Medium High School. All rights reserved.
+    </div>
+
     <script>
-        // Your Firebase configuration
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBzLchy5M2fLne4c7Ghw1KNN8wVrlZdd8M",
             authDomain: "friendsgame-872f5.firebaseapp.com",
@@ -86,14 +143,14 @@
                 const val = snapshot.val();
                 if(val) {
                     document.getElementById("student-name").value = val.name || "";
-                    document.getElementById("student-attendance").value = val.attendance || "";
                     document.getElementById("student-marks").value = val.marks || "";
+                    document.getElementById("student-attendance").value = val.attendance || "";
                     document.getElementById("student-fee").value = val.fee || "";
                     document.getElementById("student-remarks").value = val.remarks || "";
                 } else {
                     document.getElementById("student-name").value = "";
-                    document.getElementById("student-attendance").value = "";
                     document.getElementById("student-marks").value = "";
+                    document.getElementById("student-attendance").value = "";
                     document.getElementById("student-fee").value = "";
                     document.getElementById("student-remarks").value = "";
                 }
@@ -103,14 +160,14 @@
         function saveData() {
             const id = document.getElementById("student-id").value.trim();
             if(!id) {
-                alert("Please enter a student ID");
+                alert("Please enter a valid student ID first.");
                 return;
             }
 
             const data = {
                 name: document.getElementById("student-name").value,
-                attendance: document.getElementById("student-attendance").value,
                 marks: document.getElementById("student-marks").value,
+                attendance: document.getElementById("student-attendance").value,
                 fee: document.getElementById("student-fee").value,
                 remarks: document.getElementById("student-remarks").value
             };
