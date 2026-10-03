@@ -30,13 +30,10 @@
         .info-row { padding: 10px 0; border-bottom: 1px solid #eee; font-size: 14px; display: flex; justify-content: space-between; }
         .info-label { font-weight: 600; color: #555; }
         
-        .marks-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .marks-table th, .marks-table td { border: 1px solid #ddd; padding: 10px; font-size: 14px; text-align: left; }
-        .marks-table th { background-color: #f5f5f5; color: #333; }
+        .marks-table, .att-history-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .marks-table th, .marks-table td, .att-history-table th, .att-history-table td { border: 1px solid #ddd; padding: 10px; font-size: 14px; text-align: left; }
+        .marks-table th, .att-history-table th { background-color: #f5f5f5; color: #333; }
 
-        .att-history-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .att-history-table th, .att-history-table td { border: 1px solid #ddd; padding: 8px 12px; font-size: 13px; text-align: left; }
-        .att-history-table th { background-color: #f5f5f5; }
         .badge-present { color: #28a745; font-weight: bold; }
         .badge-absent { color: #d9534f; font-weight: bold; }
         .badge-holiday { color: #f0ad4e; font-weight: bold; }
@@ -121,8 +118,19 @@
 
             <!-- FEE -->
             <div id="section-fee" class="content-card">
-                <h2>Fee Details</h2>
-                <div class="info-row"><span class="info-label">Fee Status:</span> <span id="lbl-fee">Loading...</span></div>
+                <h2>Fee Payment Records</h2>
+                <table class="att-history-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Day</th>
+                            <th>Amount Paid</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fee-history-tbody">
+                        <tr><td colspan="3">Loading fee records...</td></tr>
+                    </tbody>
+                </table>
             </div>
 
             <!-- REMARKS -->
@@ -181,8 +189,30 @@
                 document.getElementById("m-science").innerText = marks.science || "-";
                 document.getElementById("m-social").innerText = marks.social || "-";
 
-                document.getElementById("lbl-fee").innerText = val.fee || "Not updated yet";
                 document.getElementById("lbl-remarks").innerText = val.remarks || "No remarks";
+            });
+
+            // Fetch Fee Transactions Ledger
+            db.ref('feeTransactions/' + studentId).once('value').then((snapshot) => {
+                const feeData = snapshot.val() || {};
+                const feeTbody = document.getElementById("fee-history-tbody");
+                feeTbody.innerHTML = "";
+
+                const keys = Object.keys(feeData);
+                if(keys.length === 0) {
+                    feeTbody.innerHTML = `<tr><td colspan="3">No fee payment records found yet.</td></tr>`;
+                } else {
+                    keys.forEach(key => {
+                        const rec = feeData[key];
+                        let tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td>${rec.date}</td>
+                            <td>${rec.day}</td>
+                            <td><strong>₹${rec.amount}</strong></td>
+                        `;
+                        feeTbody.appendChild(tr);
+                    });
+                }
             });
 
             // Fetch attendance & calculate live percentage
