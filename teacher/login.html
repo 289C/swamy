@@ -437,6 +437,7 @@
             db.ref(`attendance/${classNum}/${todayDateStr}`).once('value').then((snapshot) => {
                 const existingData = snapshot.val();
                 if (existingData) {
+                    // Check if any student record in this class for today is marked as "Holiday"
                     let isHoliday = false;
                     Object.keys(existingData).forEach(stId => {
                         if(existingData[stId] === "Holiday") isHoliday = true;
