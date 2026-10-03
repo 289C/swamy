@@ -30,6 +30,9 @@
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-weight: 600; color: #333; margin-bottom: 5px; font-size: 13px; }
         .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        
+        .marks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #fdfbff; padding: 12px; border: 1px solid #e2d9f3; border-radius: 4px; margin-bottom: 15px; }
+
         .btn { background: #6a1b9a; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; }
         .btn:hover { background: #4a126d; }
         .btn-holiday { background: #d9534f; margin-top: 15px; }
@@ -39,7 +42,9 @@
         .att-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .att-table th, .att-table td { border: 1px solid #ddd; padding: 8px 12px; font-size: 13px; text-align: left; }
         .att-table th { background-color: #f5f5f5; }
-        .status-select { padding: 5px; border-radius: 4px; font-weight: 600; }
+        
+        .radio-group { display: flex; gap: 20px; align-items: center; font-weight: 600; font-size: 13px; }
+        .radio-group label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
 
         .absent-list-box { background: #fff5f5; border: 1px solid #feb2b2; padding: 15px; border-radius: 4px; margin-top: 15px; }
         .absent-list-box h3 { color: #c53030; font-size: 15px; margin-bottom: 8px; }
@@ -49,6 +54,7 @@
         @media(max-width: 768px) {
             .main-layout { flex-direction: column; }
             .sidebar { width: 100%; }
+            .marks-grid { grid-template-columns: 1fr; }
         }
     </style>
 
@@ -79,19 +85,26 @@
         <div class="content-area">
             <!-- TAB 1: Student Data Editor -->
             <div id="tab-editor" class="content-card active">
-                <h2>Manage Student Academic & Fee Details</h2>
+                <h2>Manage Student Details & Marks</h2>
                 <div class="form-group">
-                    <label for="student-id">Select / Enter Student ID (e.g., 51)</label>
-                    <input type="text" id="student-id" placeholder="Type ID to load details first..." oninput="fetchStudentData()">
+                    <label for="student-id">Enter Student ID first to load details (e.g., 51)</label>
+                    <input type="text" id="student-id" placeholder="Type ID here..." oninput="fetchStudentData()">
                 </div>
                 <div class="form-group">
                     <label for="student-name">Student Name</label>
                     <input type="text" id="student-name" placeholder="Full name">
                 </div>
-                <div class="form-group">
-                    <label for="student-marks">Marks / Report Details</label>
-                    <textarea id="student-marks" rows="3" placeholder="Enter subjects and marks..."></textarea>
+
+                <label style="display:block; font-weight:600; color:#333; margin-bottom:5px; font-size:13px;">Subject-Wise Marks</label>
+                <div class="marks-grid">
+                    <div class="form-group" style="margin-bottom:0;"><label>Telugu</label><input type="text" id="mark-telugu" placeholder="e.g. 95/100"></div>
+                    <div class="form-group" style="margin-bottom:0;"><label>English</label><input type="text" id="mark-english" placeholder="e.g. 90/100"></div>
+                    <div class="form-group" style="margin-bottom:0;"><label>Hindi</label><input type="text" id="mark-hindi" placeholder="e.g. 88/100"></div>
+                    <div class="form-group" style="margin-bottom:0;"><label>Maths</label><input type="text" id="mark-maths" placeholder="e.g. 98/100"></div>
+                    <div class="form-group" style="margin-bottom:0;"><label>Science</label><input type="text" id="mark-science" placeholder="e.g. 92/100"></div>
+                    <div class="form-group" style="margin-bottom:0;"><label>Social</label><input type="text" id="mark-social" placeholder="e.g. 89/100"></div>
                 </div>
+
                 <div class="form-group">
                     <label for="student-fee">Fee Status</label>
                     <input type="text" id="student-fee" placeholder="e.g., Paid / Balance Due: ₹1,500">
@@ -133,7 +146,7 @@
                         <thead>
                             <tr>
                                 <th>Roll No / ID</th>
-                                <th>Status</th>
+                                <th>Attendance Selection</th>
                             </tr>
                         </thead>
                         <tbody id="att-tbody"></tbody>
@@ -143,7 +156,7 @@
                     <div id="att-success" class="success-msg">Attendance submitted successfully!</div>
                 </div>
 
-                <!-- Locked Submitted View (Shows Absentees Only) -->
+                <!-- Locked Submitted View -->
                 <div id="attendance-locked-container" style="display: none;">
                     <div style="padding: 12px; background: #e6fffa; border: 1px solid #b2f5ea; border-radius: 4px; margin-bottom: 10px; color: #234e52; font-weight: 600;">
                         ✅ Attendance for today has already been submitted and locked.
@@ -176,7 +189,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Get strict today's date formatted as YYYY-MM-DD
         const todayDateStr = new Date().toISOString().split('T')[0];
         document.getElementById('today-date-display').innerText = todayDateStr;
 
@@ -193,7 +205,12 @@
             db.ref('students/' + id).once('value').then((snapshot) => {
                 const val = snapshot.val() || {};
                 document.getElementById("student-name").value = val.name || "";
-                document.getElementById("student-marks").value = val.marks || "";
+                document.getElementById("mark-telugu").value = (val.marks && val.marks.telugu) || "";
+                document.getElementById("mark-english").value = (val.marks && val.marks.english) || "";
+                document.getElementById("mark-hindi").value = (val.marks && val.marks.hindi) || "";
+                document.getElementById("mark-maths").value = (val.marks && val.marks.maths) || "";
+                document.getElementById("mark-science").value = (val.marks && val.marks.science) || "";
+                document.getElementById("mark-social").value = (val.marks && val.marks.social) || "";
                 document.getElementById("student-fee").value = val.fee || "";
                 document.getElementById("student-remarks").value = val.remarks || "";
             });
@@ -202,12 +219,23 @@
         function saveData() {
             const id = document.getElementById("student-id").value.trim();
             if(!id) { alert("Please load or enter Student ID first"); return; }
+            
+            const marksData = {
+                telugu: document.getElementById("mark-telugu").value,
+                english: document.getElementById("mark-english").value,
+                hindi: document.getElementById("mark-hindi").value,
+                maths: document.getElementById("mark-maths").value,
+                science: document.getElementById("mark-science").value,
+                social: document.getElementById("mark-social").value
+            };
+
             const data = {
                 name: document.getElementById("student-name").value,
-                marks: document.getElementById("student-marks").value,
+                marks: marksData,
                 fee: document.getElementById("student-fee").value,
                 remarks: document.getElementById("student-remarks").value
             };
+
             db.ref('students/' + id).update(data).then(() => {
                 const msg = document.getElementById("success-msg");
                 msg.style.display = "block";
@@ -227,7 +255,6 @@
                 const existingData = snapshot.val();
                 
                 if (existingData) {
-                    // Already submitted: Show Locked View with Absentees Only
                     document.getElementById("attendance-active-container").style.display = "none";
                     document.getElementById("attendance-locked-container").style.display = "block";
                     
@@ -251,7 +278,6 @@
                         ul.innerHTML = `<li>No absentees today (All students present!).</li>`;
                     }
                 } else {
-                    // Not submitted yet: Open active form for today
                     document.getElementById("attendance-locked-container").style.display = "none";
                     document.getElementById("attendance-active-container").style.display = "block";
                     
@@ -263,10 +289,10 @@
                         tr.innerHTML = `
                             <td><strong>ID: ${studentId}</strong> (Roll ${r})</td>
                             <td>
-                                <select class="status-select" id="status-${studentId}">
-                                    <option value="Present">Present</option>
-                                    <option value="Absent">Absent</option>
-                                </select>
+                                <div class="radio-group">
+                                    <label><input type="radio" name="att-${studentId}" value="Present" checked> Present</label>
+                                    <label><input type="radio" name="att-${studentId}" value="Absent"> Absent</label>
+                                </div>
                             </td>
                         `;
                         tbody.appendChild(tr);
@@ -282,7 +308,7 @@
             let attendanceRecords = {};
             for(let r = 1; r <= 30; r++) {
                 let studentId = classNum + r;
-                let status = document.getElementById(`status-${studentId}`).value;
+                let status = document.querySelector(`input[name="att-${studentId}"]:checked`).value;
                 attendanceRecords[studentId] = status;
             }
 
@@ -295,8 +321,6 @@
             const classNum = document.getElementById("att-class").value;
             if(!classNum) { alert("Please select a class first"); return; }
 
-            let holidayRecord = { status: "Holiday" };
-            // Mark all 30 students as Holiday for this date
             let records = {};
             for(let r = 1; r <= 30; r++) {
                 records[classNum + r] = "Holiday";
