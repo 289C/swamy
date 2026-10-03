@@ -8,36 +8,36 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f6f9; display: flex; flex-direction: column; min-height: 100vh; }
 
-        /* Top Header */
         .school-banner { background: #ffffff; border-bottom: 3px solid #6a1b9a; padding: 15px 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .school-banner h1 { color: #6a1b9a; font-size: 22px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
         .school-banner p { color: #555; font-size: 11px; margin: 2px 0; }
 
-        /* Top Blue Nav Bar */
         .top-nav { background-color: #6a1b9a; color: white; padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; border-bottom: 1px solid #4a126d; }
         .top-nav a { color: white; text-decoration: none; margin-left: 15px; cursor: pointer; }
         .top-nav a:hover { text-decoration: underline; }
 
-        /* Layout Container */
         .main-layout { display: flex; flex: 1; flex-wrap: wrap; }
-
-        /* Sidebar Menu */
         .sidebar { width: 240px; background-color: #f8f9fa; border-right: 1px solid #ddd; padding: 10px 0; }
         .menu-header { background-color: #6a1b9a; color: white; padding: 10px 15px; font-weight: bold; font-size: 13px; text-align: center; margin-bottom: 5px; }
-        .menu-item { display: block; padding: 10px 15px; color: #6a1b9a; text-decoration: none; font-size: 13px; font-weight: 600; border-bottom: 1px solid #eee; }
+        .menu-item { display: block; padding: 10px 15px; color: #6a1b9a; text-decoration: none; font-size: 13px; font-weight: 600; border-bottom: 1px solid #eee; cursor: pointer; }
         .menu-item.active { background-color: #e9ecef; border-left: 4px solid #6a1b9a; }
 
-        /* Content Area */
         .content-area { flex: 1; padding: 20px; background-color: #fff; min-width: 300px; }
-        .content-card { background: #fff; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 20px; max-width: 700px; }
+        .content-card { background: #fff; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 20px; max-width: 800px; display: none; }
+        .content-card.active { display: block; }
         .content-card h2 { color: #6a1b9a; font-size: 18px; border-bottom: 2px solid #6a1b9a; padding-bottom: 8px; margin-bottom: 15px; text-transform: uppercase; }
 
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-weight: 600; color: #333; margin-bottom: 5px; font-size: 13px; }
-        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-        .btn { background: #6a1b9a; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        .btn { background: #6a1b9a; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; }
         .btn:hover { background: #4a126d; }
         .success-msg { color: #28a745; font-weight: 600; margin-top: 10px; text-align: center; display: none; }
+
+        .att-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .att-table th, .att-table td { border: 1px solid #ddd; padding: 8px 12px; font-size: 13px; text-align: left; }
+        .att-table th { background-color: #f5f5f5; }
+        .status-select { padding: 5px; border-radius: 4px; font-weight: 600; }
 
         .footer { background: #1e3c72; color: white; text-align: center; padding: 10px; font-size: 11px; }
 
@@ -53,66 +53,91 @@
 </head>
 <body>
 
-    <!-- School Header -->
     <div class="school-banner">
         <h1>Swamy English Medium High School</h1>
         <p>Recognized by Govt. of A.P. | L.K.G. to X CLASS</p>
         <p>Opp. 3 APSP, Anjaneya Nagar, Kakinada - 533 005 | Mob: 98483 50583</p>
     </div>
 
-    <!-- Top Action Nav -->
     <div class="top-nav">
         <span>Teacher Control Panel</span>
-        <div>
-            <a onclick="location.href='../index.html'">Logout</a>
-        </div>
+        <div><a onclick="location.href='../index.html'">Logout</a></div>
     </div>
 
-    <!-- Main Sidebar & Content Container -->
     <div class="main-layout">
-        <!-- Sidebar Menu -->
         <div class="sidebar">
             <div class="menu-header">TEACHER MENU</div>
-            <a href="#" class="menu-item active">STUDENT DATA EDITOR</a>
+            <a class="menu-item active" onclick="switchTab('editor', this)">STUDENT DATA EDITOR</a>
+            <a class="menu-item" onclick="switchTab('attendance', this)">DAILY ATTENDANCE</a>
         </div>
 
-        <!-- Content Area -->
         <div class="content-area">
-            <div class="content-card">
-                <h2>Manage Student Records (Cloud Sync)</h2>
-                
+            <!-- TAB 1: Student Data Editor -->
+            <div id="tab-editor" class="content-card active">
+                <h2>Manage Student Academic & Fee Details</h2>
                 <div class="form-group">
                     <label for="student-id">Student ID / Username (e.g., 51)</label>
-                    <input type="text" id="student-id" placeholder="Type student ID to fetch or create data" oninput="fetchStudentData()">
+                    <input type="text" id="student-id" placeholder="Type ID to fetch or create data" oninput="fetchStudentData()">
                 </div>
-
                 <div class="form-group">
                     <label for="student-name">Student Name</label>
-                    <input type="text" id="student-name" placeholder="Full name of student">
+                    <input type="text" id="student-name" placeholder="Full name">
                 </div>
-
                 <div class="form-group">
-                    <label for="student-marks">Marks / Academic Report Details</label>
-                    <textarea id="student-marks" rows="3" placeholder="Enter subjects and marks breakdown..."></textarea>
+                    <label for="student-marks">Marks / Report Details</label>
+                    <textarea id="student-marks" rows="3" placeholder="Enter subjects and marks..."></textarea>
                 </div>
-
-                <div class="form-group">
-                    <label for="student-attendance">Attendance Status / Percentage</label>
-                    <input type="text" id="student-attendance" placeholder="e.g., Present (96%)">
-                </div>
-
                 <div class="form-group">
                     <label for="student-fee">Fee Status</label>
                     <input type="text" id="student-fee" placeholder="e.g., Paid / Balance Due: ₹1,500">
                 </div>
-
                 <div class="form-group">
                     <label for="student-remarks">Teacher Remarks</label>
-                    <textarea id="student-remarks" rows="2" placeholder="Enter remarks or feedback..."></textarea>
+                    <textarea id="student-remarks" rows="2" placeholder="Enter remarks..."></textarea>
+                </div>
+                <button class="btn" onclick="saveData()">Save Details Permanently</button>
+                <div id="success-msg" class="success-msg">Data successfully saved!</div>
+            </div>
+
+            <!-- TAB 2: Daily Attendance -->
+            <div id="tab-attendance" class="content-card">
+                <h2>First Period Attendance Manager</h2>
+                <div class="form-group">
+                    <label for="att-class">Select Class</label>
+                    <select id="att-class" onchange="loadClassStudents()">
+                        <option value="">-- Choose Class --</option>
+                        <option value="1">Class 1</option>
+                        <option value="2">Class 2</option>
+                        <option value="3">Class 3</option>
+                        <option value="4">Class 4</option>
+                        <option value="5">Class 5</option>
+                        <option value="6">Class 6</option>
+                        <option value="7">Class 7</option>
+                        <option value="8">Class 8</option>
+                        <option value="9">Class 9</option>
+                        <option value="10">Class 10</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="att-date">Attendance Date</label>
+                    <input type="date" id="att-date" onchange="loadClassStudents()">
                 </div>
 
-                <button class="btn" onclick="saveData()">Save Changes Permanently to Cloud</button>
-                <div id="success-msg" class="success-msg">Data successfully saved and updated for student login!</div>
+                <div id="attendance-container" style="display: none;">
+                    <table class="att-table">
+                        <thead>
+                            <tr>
+                                <th>Roll No / ID</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="att-tbody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                    <button class="btn" onclick="submitAttendance()">Submit Today's Attendance</button>
+                    <div id="att-success" class="success-msg">Attendance recorded successfully for this date!</div>
+                </div>
             </div>
         </div>
     </div>
@@ -122,7 +147,6 @@
     </div>
 
     <script>
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBzLchy5M2fLne4c7Ghw1KNN8wVrlZdd8M",
             authDomain: "friendsgame-872f5.firebaseapp.com",
@@ -136,44 +160,92 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // Set today's date by default
+        document.getElementById('att-date').valueAsDate = new Date();
+
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.content-card').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.sidebar .menu-item').forEach(m => m.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            element.classList.add('active');
+        }
+
         function fetchStudentData() {
             const id = document.getElementById("student-id").value.trim();
             if(!id) return;
             db.ref('students/' + id).once('value').then((snapshot) => {
-                const val = snapshot.val();
-                if(val) {
-                    document.getElementById("student-name").value = val.name || "";
-                    document.getElementById("student-marks").value = val.marks || "";
-                    document.getElementById("student-attendance").value = val.attendance || "";
-                    document.getElementById("student-fee").value = val.fee || "";
-                    document.getElementById("student-remarks").value = val.remarks || "";
-                } else {
-                    document.getElementById("student-name").value = "";
-                    document.getElementById("student-marks").value = "";
-                    document.getElementById("student-attendance").value = "";
-                    document.getElementById("student-fee").value = "";
-                    document.getElementById("student-remarks").value = "";
-                }
+                const val = snapshot.val() || {};
+                document.getElementById("student-name").value = val.name || "";
+                document.getElementById("student-marks").value = val.marks || "";
+                document.getElementById("student-fee").value = val.fee || "";
+                document.getElementById("student-remarks").value = val.remarks || "";
             });
         }
 
         function saveData() {
             const id = document.getElementById("student-id").value.trim();
-            if(!id) {
-                alert("Please enter a valid student ID first.");
-                return;
-            }
-
+            if(!id) { alert("Enter Student ID"); return; }
             const data = {
                 name: document.getElementById("student-name").value,
                 marks: document.getElementById("student-marks").value,
-                attendance: document.getElementById("student-attendance").value,
                 fee: document.getElementById("student-fee").value,
                 remarks: document.getElementById("student-remarks").value
             };
-
-            db.ref('students/' + id).set(data).then(() => {
+            db.ref('students/' + id).update(data).then(() => {
                 const msg = document.getElementById("success-msg");
+                msg.style.display = "block";
+                setTimeout(() => msg.style.display = "none", 2500);
+            });
+        }
+
+        function loadClassStudents() {
+            const classNum = document.getElementById("att-class").value;
+            const dateStr = document.getElementById("att-date").value;
+            if(!classNum || !dateStr) return;
+
+            document.getElementById("attendance-container").style.display = "block";
+            const tbody = document.getElementById("att-tbody");
+            tbody.innerHTML = "Loading...";
+
+            // Fetch existing attendance for this class and date if already submitted
+            db.ref(`attendance/${classNum}/${dateStr}`).once('value').then((snapshot) => {
+                const existingData = snapshot.val() || {};
+                tbody.innerHTML = "";
+
+                // Generate 30 students for the selected class
+                for(let r = 1; r <= 30; r++) {
+                    let studentId = classNum + r;
+                    let currentStatus = existingData[studentId] || "Present";
+
+                    let tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><strong>ID: ${studentId}</strong> (Roll ${r})</td>
+                        <td>
+                            <select class="status-select" id="status-${studentId}">
+                                <option value="Present" ${currentStatus === "Present" ? "selected" : ""}>Present</option>
+                                <option value="Absent" ${currentStatus === "Absent" ? "selected" : ""}>Absent</option>
+                            </select>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+        }
+
+        function submitAttendance() {
+            const classNum = document.getElementById("att-class").value;
+            const dateStr = document.getElementById("att-date").value;
+            if(!classNum || !dateStr) return;
+
+            let attendanceRecords = {};
+            for(let r = 1; r <= 30; r++) {
+                let studentId = classNum + r;
+                let status = document.getElementById(`status-${studentId}`).value;
+                attendanceRecords[studentId] = status;
+            }
+
+            db.ref(`attendance/${classNum}/${dateStr}`).set(attendanceRecords).then(() => {
+                const msg = document.getElementById("att-success");
                 msg.style.display = "block";
                 setTimeout(() => msg.style.display = "none", 2500);
             });
