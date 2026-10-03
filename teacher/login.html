@@ -43,9 +43,6 @@
         .att-table th, .att-table td { border: 1px solid #ddd; padding: 8px 12px; font-size: 13px; text-align: left; }
         .att-table th { background-color: #f5f5f5; }
         
-        .radio-group { display: flex; gap: 20px; align-items: center; font-weight: 600; font-size: 13px; }
-        .radio-group label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
-
         .fee-status-box { background: #f8fafc; border: 1px solid #cbd5e0; padding: 12px; border-radius: 4px; margin-bottom: 15px; display: flex; justify-content: space-around; text-align: center; }
         .fee-stat-item span { display: block; font-size: 11px; color: #555; font-weight: 600; }
         .fee-stat-item strong { font-size: 16px; color: #1e3c72; }
@@ -94,7 +91,7 @@
         <div class="content-area">
             <!-- TAB 1: Student Profile Editor -->
             <div id="tab-editor" class="content-card active">
-                <h2>Manage Student Profile & Remarks</h2>
+                <h2>Manage Student Profile & Password</h2>
                 <div class="form-group">
                     <label for="student-id">Enter Student ID first to load details (e.g., 51)</label>
                     <input type="text" id="student-id" placeholder="Type ID here..." oninput="fetchStudentData()">
@@ -104,11 +101,15 @@
                     <input type="text" id="student-name" placeholder="Full name">
                 </div>
                 <div class="form-group">
+                    <label for="student-password">Student Password</label>
+                    <input type="text" id="student-password" placeholder="Default is webcap or custom password">
+                </div>
+                <div class="form-group">
                     <label for="student-remarks">Teacher Remarks</label>
                     <textarea id="student-remarks" rows="2" placeholder="Enter remarks..."></textarea>
                 </div>
-                <button class="btn" onclick="saveProfileData()">Save Profile Permanently</button>
-                <div id="success-msg" class="success-msg">Profile successfully saved!</div>
+                <button class="btn" onclick="saveProfileData()">Save Profile & Password Permanently</button>
+                <div id="success-msg" class="success-msg">Profile and password successfully saved!</div>
             </div>
 
             <!-- TAB 2: Exam Marks Editor -->
@@ -194,10 +195,8 @@
             <div id="tab-attendance" class="content-card">
                 <h2>First Period Attendance Manager (Today Only)</h2>
                 
-                <!-- Holiday Declare Button (Always on top) -->
                 <button id="btn-declare-holiday" class="btn btn-holiday" onclick="promptHoliday()">Declare Holiday For Today (All School)</button>
 
-                <!-- Holiday Banner View (Blocked Screen) -->
                 <div id="attendance-holiday-container" style="display: none;">
                     <div class="holiday-banner">
                         🎉 TODAY IS DECLARED AS A HOLIDAY FOR ALL SCHOOL!<br>
@@ -206,7 +205,6 @@
                     <button class="btn" onclick="undoHoliday()" style="background:#337ab7; margin-top:15px;">Remove Holiday</button>
                 </div>
 
-                <!-- Choose Class Section -->
                 <div id="attendance-selection-box">
                     <div class="form-group">
                         <label for="att-class">Select Class</label>
@@ -229,7 +227,6 @@
                     </div>
                 </div>
 
-                <!-- Active Submission View -->
                 <div id="attendance-active-container" style="display: none;">
                     <table class="att-table">
                         <thead>
@@ -244,7 +241,6 @@
                     <div id="att-success" class="success-msg">Attendance submitted successfully!</div>
                 </div>
 
-                <!-- Locked Submitted View -->
                 <div id="attendance-locked-container" style="display: none;">
                     <div style="padding: 12px; background: #e6fffa; border: 1px solid #b2f5ea; border-radius: 4px; margin-bottom: 10px; color: #234e52; font-weight: 600;">
                         ✅ Attendance for today has already been submitted and locked.
@@ -301,6 +297,7 @@
             db.ref('students/' + id).once('value').then((snapshot) => {
                 const val = snapshot.val() || {};
                 document.getElementById("student-name").value = val.name || "";
+                document.getElementById("student-password").value = val.password || "webcap";
                 document.getElementById("student-remarks").value = val.remarks || "";
             });
         }
@@ -310,6 +307,7 @@
             if(!id) { alert("Please load or enter Student ID first"); return; }
             const data = {
                 name: document.getElementById("student-name").value,
+                password: document.getElementById("student-password").value || "webcap",
                 remarks: document.getElementById("student-remarks").value
             };
             db.ref('students/' + id).update(data).then(() => {
@@ -517,8 +515,6 @@
             let confirmHoliday = confirm("Are you sure you want to declare today as a Holiday for the entire school?");
             if (!confirmHoliday) return;
 
-            // 1. Set global school holiday flag
-            // 2. Set holiday record for all classes in attendance node so students see it
             let updates = {};
             updates[`schoolHolidays/${todayDateStr}`] = true;
 
