@@ -34,6 +34,13 @@
         .marks-table th, .marks-table td, .att-history-table th, .att-history-table td { border: 1px solid #ddd; padding: 10px; font-size: 14px; text-align: left; }
         .marks-table th, .att-history-table th { background-color: #f5f5f5; color: #333; }
 
+        .exam-section-box { border: 1px solid #cbd5e0; border-radius: 6px; padding: 15px; margin-bottom: 20px; background: #fafbfc; }
+        .exam-section-box h3 { color: #1e3c72; font-size: 16px; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
+
+        .fee-summary-box { display: flex; justify-content: space-around; background: #eef2f7; padding: 15px; border-radius: 6px; margin-bottom: 15px; text-align: center; }
+        .fee-box-item span { display: block; font-size: 12px; color: #555; font-weight: 600; }
+        .fee-box-item strong { font-size: 18px; color: #1e3c72; }
+
         .badge-present { color: #28a745; font-weight: bold; }
         .badge-absent { color: #d9534f; font-weight: bold; }
         .badge-holiday { color: #f0ad4e; font-weight: bold; }
@@ -43,6 +50,7 @@
         @media(max-width: 768px) {
             .main-layout { flex-direction: column; }
             .sidebar { width: 100%; }
+            .fee-summary-box { flex-direction: column; gap: 10px; }
         }
     </style>
 
@@ -66,35 +74,27 @@
     <div class="main-layout">
         <div class="sidebar">
             <div class="menu-header">MENU</div>
-            <a class="menu-item active" onclick="switchSection('marks', this)">MARKS & PROFILE</a>
+            <a class="menu-item active" onclick="switchSection('profile', this)">STUDENT PROFILE</a>
+            <a class="menu-item" onclick="switchSection('marks', this)">MARKS (FA / SA)</a>
             <a class="menu-item" onclick="switchSection('attendance', this)">ATTENDANCE RECORD</a>
             <a class="menu-item" onclick="switchSection('fee', this)">FEE DETAILS</a>
             <a class="menu-item" onclick="switchSection('remarks', this)">TEACHER REMARKS</a>
         </div>
 
         <div class="content-area">
-            <!-- MARKS -->
-            <div id="section-marks" class="content-card active">
-                <h2>Marks / Subject-Wise Report</h2>
+            <!-- PROFILE -->
+            <div id="section-profile" class="content-card active">
+                <h2>Student Profile Details</h2>
                 <div class="info-row"><span class="info-label">Student ID:</span> <span id="lbl-id">-</span></div>
                 <div class="info-row"><span class="info-label">Student Name:</span> <span id="lbl-name">Loading...</span></div>
-                
-                <table class="marks-table">
-                    <thead>
-                        <tr>
-                            <th>Subject</th>
-                            <th>Marks Obtained</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><strong>Telugu</strong></td><td id="m-telugu">-</td></tr>
-                        <tr><td><strong>English</strong></td><td id="m-english">-</td></tr>
-                        <tr><td><strong>Hindi</strong></td><td id="m-hindi">-</td></tr>
-                        <tr><td><strong>Maths</strong></td><td id="m-maths">-</td></tr>
-                        <tr><td><strong>Science</strong></td><td id="m-science">-</td></tr>
-                        <tr><td><strong>Social</strong></td><td id="m-social">-</td></tr>
-                    </tbody>
-                </table>
+            </div>
+
+            <!-- MARKS (FA1, FA2, SA1, FA3, FA4, SA2 with automatic percentage) -->
+            <div id="section-marks" class="content-card">
+                <h2>Exam Marks & Percentages</h2>
+                <div id="marks-container">
+                    <p style="color:#666; font-style:italic;">Checking exam results...</p>
+                </div>
             </div>
 
             <!-- ATTENDANCE -->
@@ -116,9 +116,25 @@
                 </table>
             </div>
 
-            <!-- FEE -->
+            <!-- FEE (Total 20000 default, remaining calculation & records) -->
             <div id="section-fee" class="content-card">
-                <h2>Fee Payment Records</h2>
+                <h2>Fee Summary & Payment Records</h2>
+                <div class="fee-summary-box">
+                    <div class="fee-box-item">
+                        <span>Total Course Fee</span>
+                        <strong id="fee-total">₹20,000</strong>
+                    </div>
+                    <div class="fee-box-item">
+                        <span>Total Paid</span>
+                        <strong id="fee-paid" style="color: #28a745;">₹0</strong>
+                    </div>
+                    <div class="fee-box-item">
+                        <span>Remaining Balance</span>
+                        <strong id="fee-remaining" style="color: #d9534f;">₹20,000</strong>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 15px; margin-top: 20px; margin-bottom: 10px; color: #1e3c72;">Transaction Ledger</h3>
                 <table class="att-history-table">
                     <thead>
                         <tr>
@@ -176,43 +192,110 @@
                 classNum = studentId.substring(0, 1);
             }
 
-            // Fetch profile & subject marks
+            // Fetch profile data
             db.ref('students/' + studentId).once('value').then((snapshot) => {
                 const val = snapshot.val() || {};
                 document.getElementById("lbl-name").innerText = val.name || "Not updated yet";
-                
-                const marks = val.marks || {};
-                document.getElementById("m-telugu").innerText = marks.telugu || "-";
-                document.getElementById("m-english").innerText = marks.english || "-";
-                document.getElementById("m-hindi").innerText = marks.hindi || "-";
-                document.getElementById("m-maths").innerText = marks.maths || "-";
-                document.getElementById("m-science").innerText = marks.science || "-";
-                document.getElementById("m-social").innerText = marks.social || "-";
-
                 document.getElementById("lbl-remarks").innerText = val.remarks || "No remarks";
             });
 
-            // Fetch Fee Transactions Ledger
-            db.ref('feeTransactions/' + studentId).once('value').then((snapshot) => {
-                const feeData = snapshot.val() || {};
-                const feeTbody = document.getElementById("fee-history-tbody");
-                feeTbody.innerHTML = "";
+            // Fetch Exam Marks and calculate percentages
+            db.ref('exams/' + studentId).once('value').then((snapshot) => {
+                const examsData = snapshot.val();
+                const marksContainer = document.getElementById("marks-container");
+                marksContainer.innerHTML = "";
 
-                const keys = Object.keys(feeData);
-                if(keys.length === 0) {
-                    feeTbody.innerHTML = `<tr><td colspan="3">No fee payment records found yet.</td></tr>`;
-                } else {
-                    keys.forEach(key => {
-                        const rec = feeData[key];
-                        let tr = document.createElement("tr");
-                        tr.innerHTML = `
-                            <td>${rec.date}</td>
-                            <td>${rec.day}</td>
-                            <td><strong>₹${rec.amount}</strong></td>
-                        `;
-                        feeTbody.appendChild(tr);
-                    });
+                if (!examsData || Object.keys(examsData).length === 0) {
+                    marksContainer.innerHTML = `<p style="color:#d9534f; font-weight:600; text-align:center; padding:20px;">No data available (No exam marks entered yet).</p>`;
+                    return;
                 }
+
+                const examNames = {
+                    fa1: "FA1 Exam (Max 35 per subject)",
+                    fa2: "FA2 Exam (Max 35 per subject)",
+                    sa1: "SA1 Exam (Max 100 per subject)",
+                    fa3: "FA3 Exam (Max 35 per subject)",
+                    fa4: "FA4 Exam (Max 35 per subject)",
+                    sa2: "SA2 Exam (Max 100 per subject)"
+                };
+
+                const maxPerSubject = { fa1: 35, fa2: 35, sa1: 100, fa3: 35, fa4: 35, sa2: 100 };
+
+                Object.keys(examNames).forEach(exKey => {
+                    if (examsData[exKey]) {
+                        const subMarks = examsData[exKey];
+                        const maxSub = maxPerSubject[exKey];
+                        
+                        let totalObtained = 0;
+                        let subjectsCount = 0;
+                        let subRows = "";
+
+                        ['telugu', 'english', 'hindi', 'maths', 'science', 'social'].forEach(sub => {
+                            let val = subMarks[sub];
+                            if(val !== undefined && val !== "") {
+                                let num = parseFloat(val);
+                                totalObtained += num;
+                                subjectsCount++;
+                                subRows += `<tr><td><strong>${sub.toUpperCase()}</strong></td><td>${val} / ${maxSub}</td></tr>`;
+                            } else {
+                                subRows += `<tr><td><strong>${sub.toUpperCase()}</strong></td><td>-</td></tr>`;
+                            }
+                        });
+
+                        let maxTotal = subjectsCount * maxSub;
+                        let percentage = maxTotal > 0 ? ((totalObtained / maxTotal) * 100).toFixed(2) : "0.00";
+
+                        let box = document.createElement("div");
+                        box.className = "exam-section-box";
+                        box.innerHTML = `
+                            <h3>${examNames[exKey]}</h3>
+                            <div style="font-size: 14px; font-weight: bold; color: #28a745; margin-bottom: 10px;">
+                                Percentage: ${percentage}% (${totalObtained} / ${maxTotal} Marks)
+                            </div>
+                            <table class="marks-table">
+                                <thead><tr><th>Subject</th><th>Marks Obtained</th></tr></thead>
+                                <tbody>${subRows}</tbody>
+                            </table>
+                        `;
+                        marksContainer.appendChild(box);
+                    }
+                });
+            });
+
+            // Fetch Fee Transactions Ledger & calculate remaining balance
+            db.ref('students/' + studentId).once('value').then((snap) => {
+                const sVal = snap.val() || {};
+                const totalFee = parseFloat(sVal.totalFee || 20000);
+                document.getElementById("fee-total").innerText = "₹" + totalFee.toLocaleString();
+
+                db.ref('feeTransactions/' + studentId).once('value').then((snapshot) => {
+                    const feeData = snapshot.val() || {};
+                    const feeTbody = document.getElementById("fee-history-tbody");
+                    feeTbody.innerHTML = "";
+
+                    let totalPaid = 0;
+                    const keys = Object.keys(feeData);
+                    
+                    if(keys.length === 0) {
+                        feeTbody.innerHTML = `<tr><td colspan="3">No fee payment records found yet.</td></tr>`;
+                    } else {
+                        keys.forEach(key => {
+                            const rec = feeData[key];
+                            totalPaid += parseFloat(rec.amount || 0);
+                            let tr = document.createElement("tr");
+                            tr.innerHTML = `
+                                <td>${rec.date}</td>
+                                <td>${rec.day}</td>
+                                <td><strong>₹${parseFloat(rec.amount).toLocaleString()}</strong></td>
+                            `;
+                            feeTbody.appendChild(tr);
+                        });
+                    }
+
+                    let remaining = totalFee - totalPaid;
+                    document.getElementById("fee-paid").innerText = "₹" + totalPaid.toLocaleString();
+                    document.getElementById("fee-remaining").innerText = "₹" + remaining.toLocaleString();
+                });
             });
 
             // Fetch attendance & calculate live percentage
