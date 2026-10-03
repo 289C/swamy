@@ -46,6 +46,10 @@
         .radio-group { display: flex; gap: 20px; align-items: center; font-weight: 600; font-size: 13px; }
         .radio-group label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
 
+        .fee-status-box { background: #f8fafc; border: 1px solid #cbd5e0; padding: 12px; border-radius: 4px; margin-bottom: 15px; display: flex; justify-content: space-around; text-align: center; }
+        .fee-stat-item span { display: block; font-size: 11px; color: #555; font-weight: 600; }
+        .fee-stat-item strong { font-size: 16px; color: #1e3c72; }
+
         .absent-list-box { background: #fff5f5; border: 1px solid #feb2b2; padding: 15px; border-radius: 4px; margin-top: 15px; }
         .absent-list-box h3 { color: #c53030; font-size: 15px; margin-bottom: 8px; }
 
@@ -55,6 +59,7 @@
             .main-layout { flex-direction: column; }
             .sidebar { width: 100%; }
             .marks-grid { grid-template-columns: 1fr; }
+            .fee-status-box { flex-direction: column; gap: 8px; }
         }
     </style>
 
@@ -104,7 +109,7 @@
                 <div id="success-msg" class="success-msg">Profile successfully saved!</div>
             </div>
 
-            <!-- TAB 2: Exam Marks Editor (FA1, FA2, SA1, FA3, FA4, SA2) -->
+            <!-- TAB 2: Exam Marks Editor -->
             <div id="tab-marks" class="content-card">
                 <h2>Exam Marks Manager (FA / SA)</h2>
                 <div class="form-group">
@@ -142,22 +147,38 @@
                 <h2>Fee Payment & Total Fee Manager</h2>
                 <div class="form-group">
                     <label for="fee-student-id">Enter Student ID (e.g., 51)</label>
-                    <input type="text" id="fee-student-id" placeholder="Type student ID..." oninput="fetchFeeStudentData()">
+                    <input type="text" id="fee-student-id" placeholder="Type student ID to check fee..." oninput="fetchFeeStudentData()">
                 </div>
                 <div class="form-group">
                     <label>Student Name: <strong id="fee-student-name" style="color:#6a1b9a;">-</strong></label>
                 </div>
+
+                <div class="fee-status-box">
+                    <div class="fee-stat-item">
+                        <span>Total Course Fee</span>
+                        <strong id="t-total-fee">₹20,000</strong>
+                    </div>
+                    <div class="fee-stat-item">
+                        <span>Total Paid</span>
+                        <strong id="t-paid-fee" style="color:#28a745;">₹0</strong>
+                    </div>
+                    <div class="fee-stat-item">
+                        <span>Remaining Balance</span>
+                        <strong id="t-rem-fee" style="color:#d9534f;">₹20,000</strong>
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label for="total-fee-input">Total Course Fee (Default ₹20,000 - Editable)</label>
+                    <label for="total-fee-input">Edit Total Fee (Default ₹20,000)</label>
                     <input type="number" id="total-fee-input" value="20000">
                 </div>
-                <button class="btn" onclick="saveTotalFee()" style="background:#337ab7;">Update Total Fee</button>
+                <button class="btn" onclick="saveTotalFee()" style="background:#337ab7;">Update Total Fee Separately</button>
                 <div id="total-fee-success" class="success-msg">Total fee updated successfully!</div>
 
                 <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;">
 
                 <div class="form-group">
-                    <label for="fee-amount">Record New Payment Amount Paid (₹)</label>
+                    <label for="fee-amount">Record Payment Amount (₹)</label>
                     <input type="number" id="fee-amount" placeholder="e.g. 5000">
                 </div>
                 <div class="form-group">
@@ -201,7 +222,7 @@
                         <tbody id="att-tbody"></tbody>
                     </table>
                     <button class="btn" onclick="submitAttendance()">Submit Today's Attendance</button>
-                    <button class="btn btn-holiday" onclick="declareHoliday()">Declare Holiday For Today</button>
+                    <button class="btn btn-holiday" onclick="promptHoliday()">Declare Holiday For Today</button>
                     <div id="att-success" class="success-msg">Attendance submitted successfully!</div>
                 </div>
 
@@ -213,7 +234,7 @@
                         <h3>Today's Absentees List:</h3>
                         <ul id="absentee-ul" style="padding-left: 20px; font-size: 14px; color: #2d3748;"></ul>
                     </div>
-                    <button class="btn btn-holiday" onclick="declareHoliday()" style="margin-top: 15px;">Change to Holiday</button>
+                    <button class="btn btn-holiday" onclick="promptHoliday()" style="margin-top: 15px;">Change to Holiday</button>
                 </div>
             </div>
         </div>
@@ -331,17 +352,29 @@
             if(!id) {
                 document.getElementById("fee-student-name").innerText = "-";
                 document.getElementById("total-fee-input").value = "20000";
+                document.getElementById("t-total-fee").innerText = "₹20,000";
+                document.getElementById("t-paid-fee").innerText = "₹0";
+                document.getElementById("t-rem-fee").innerText = "₹20,000";
                 return;
             }
+
             db.ref('students/' + id).once('value').then((snapshot) => {
-                const val = snapshot.val();
-                if(val) {
-                    document.getElementById("fee-student-name").innerText = val.name || "Unnamed";
-                    document.getElementById("total-fee-input").value = val.totalFee || 20000;
-                } else {
-                    document.getElementById("fee-student-name").innerText = "Not found";
-                    document.getElementById("total-fee-input").value = 20000;
-                }
+                const val = snapshot.val() || {};
+                document.getElementById("fee-student-name").innerText = val.name || "Unnamed Student";
+                const totalFee = parseFloat(val.totalFee || 20000);
+                document.getElementById("total-fee-input").value = totalFee;
+                document.getElementById("t-total-fee").innerText = "₹" + totalFee.toLocaleString();
+
+                db.ref('feeTransactions/' + id).once('value').then((snapTrans) => {
+                    const transData = snapTrans.val() || {};
+                    let totalPaid = 0;
+                    Object.keys(transData).forEach(k => {
+                        totalPaid += parseFloat(transData[k].amount || 0);
+                    });
+                    let remaining = totalFee - totalPaid;
+                    document.getElementById("t-paid-fee").innerText = "₹" + totalPaid.toLocaleString();
+                    document.getElementById("t-rem-fee").innerText = "₹" + remaining.toLocaleString();
+                });
             });
         }
 
@@ -353,6 +386,7 @@
             db.ref('students/' + id).update({ totalFee: totalFee }).then(() => {
                 const msg = document.getElementById("total-fee-success");
                 msg.style.display = "block";
+                fetchFeeStudentData();
                 setTimeout(() => msg.style.display = "none", 2500);
             });
         }
@@ -373,6 +407,7 @@
                 const msg = document.getElementById("fee-success-msg");
                 msg.style.display = "block";
                 document.getElementById("fee-amount").value = "";
+                fetchFeeStudentData();
                 setTimeout(() => msg.style.display = "none", 2500);
             });
         }
@@ -439,15 +474,37 @@
             db.ref(`attendance/${classNum}/${todayDateStr}`).set(attendanceRecords).then(() => checkTodayAttendanceStatus());
         }
 
-        function declareHoliday() {
+        function promptHoliday() {
             const classNum = document.getElementById("att-class").value;
-            if(!classNum) { alert("Select a class first"); return; }
-            let records = {};
-            for(let r = 1; r <= 30; r++) records[classNum + r] = "Holiday";
-            db.ref(`attendance/${classNum}/${todayDateStr}`).set(records).then(() => {
-                alert("Holiday declared successfully.");
-                checkTodayAttendanceStatus();
-            });
+            if(!classNum) { alert("Please select a class first"); return; }
+
+            let choice = confirm("Click OK to declare Holiday for ALL SCHOOL (Classes 1 to 10), or Cancel for THIS CLASS ONLY.");
+            
+            if (choice) {
+                // All School Holiday
+                let updates = {};
+                for(let c = 1; c <= 10; c++) {
+                    let classRecords = {};
+                    for(let r = 1; r <= 30; r++) {
+                        classRecords[c + r.toString()] = "Holiday";
+                    }
+                    updates[c] = classRecords;
+                }
+                db.ref(`attendance`).update(updates).then(() => {
+                    alert("Holiday declared successfully for ALL SCHOOL!");
+                    checkTodayAttendanceStatus();
+                });
+            } else {
+                // This Class Only Holiday
+                let records = {};
+                for(let r = 1; r <= 30; r++) {
+                    records[classNum + r] = "Holiday";
+                }
+                db.ref(`attendance/${classNum}/${todayDateStr}`).set(records).then(() => {
+                    alert(`Holiday declared successfully for Class ${classNum} only.`);
+                    checkTodayAttendanceStatus();
+                });
+            }
         }
     </script>
 </body>
