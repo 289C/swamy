@@ -86,6 +86,7 @@
             <a class="menu-item" onclick="switchTab('marks', this)">EXAM MARKS (FA/SA)</a>
             <a class="menu-item" onclick="switchTab('fee', this)">FEE MANAGEMENT</a>
             <a class="menu-item" onclick="switchTab('attendance', this)">TODAY'S ATTENDANCE</a>
+            <a class="menu-item" onclick="switchTab('password', this)">CHANGE PASSWORD</a>
         </div>
 
         <div class="content-area">
@@ -251,6 +252,17 @@
                     </div>
                 </div>
             </div>
+
+            <!-- TAB 5: Change Password -->
+            <div id="tab-password" class="content-card">
+                <h2>Change Teacher Login Password</h2>
+                <div class="form-group">
+                    <label for="new-teacher-password">New Password</label>
+                    <input type="password" id="new-teacher-password" placeholder="Enter new password">
+                </div>
+                <button class="btn" onclick="saveTeacherPassword()">Update Password Permanently</button>
+                <div id="password-success-msg" class="success-msg">Teacher password updated successfully!</div>
+            </div>
         </div>
     </div>
 
@@ -313,6 +325,18 @@
             db.ref('students/' + id).update(data).then(() => {
                 const msg = document.getElementById("success-msg");
                 msg.style.display = "block";
+                setTimeout(() => msg.style.display = "none", 2500);
+            });
+        }
+
+        function saveTeacherPassword() {
+            const newPass = document.getElementById("new-teacher-password").value.trim();
+            if(!newPass) { alert("Please enter a new password"); return; }
+
+            db.ref('teachers/teacher/password').set(newPass).then(() => {
+                const msg = document.getElementById("password-success-msg");
+                msg.style.display = "block";
+                document.getElementById("new-teacher-password").value = "";
                 setTimeout(() => msg.style.display = "none", 2500);
             });
         }
