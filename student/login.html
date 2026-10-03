@@ -30,6 +30,10 @@
         .info-row { padding: 10px 0; border-bottom: 1px solid #eee; font-size: 14px; display: flex; justify-content: space-between; }
         .info-label { font-weight: 600; color: #555; }
         
+        .marks-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .marks-table th, .marks-table td { border: 1px solid #ddd; padding: 10px; font-size: 14px; text-align: left; }
+        .marks-table th { background-color: #f5f5f5; color: #333; }
+
         .att-history-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .att-history-table th, .att-history-table td { border: 1px solid #ddd; padding: 8px 12px; font-size: 13px; text-align: left; }
         .att-history-table th { background-color: #f5f5f5; }
@@ -74,20 +78,33 @@
         <div class="content-area">
             <!-- MARKS -->
             <div id="section-marks" class="content-card active">
-                <h2>Marks / Academic Report</h2>
+                <h2>Marks / Subject-Wise Report</h2>
                 <div class="info-row"><span class="info-label">Student ID:</span> <span id="lbl-id">-</span></div>
                 <div class="info-row"><span class="info-label">Student Name:</span> <span id="lbl-name">Loading...</span></div>
-                <div style="margin-top: 15px;">
-                    <label style="font-weight:600; font-size:13px; color:#333;">Detailed Report:</label>
-                    <div id="lbl-marks" style="padding: 12px; background: #f9f9f9; border: 1px solid #ddd; margin-top: 5px; border-radius: 4px; font-size: 14px;">Loading...</div>
-                </div>
+                
+                <table class="marks-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Marks Obtained</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>Telugu</strong></td><td id="m-telugu">-</td></tr>
+                        <tr><td><strong>English</strong></td><td id="m-english">-</td></tr>
+                        <tr><td><strong>Hindi</strong></td><td id="m-hindi">-</td></tr>
+                        <tr><td><strong>Maths</strong></td><td id="m-maths">-</td></tr>
+                        <tr><td><strong>Science</strong></td><td id="m-science">-</td></tr>
+                        <tr><td><strong>Social</strong></td><td id="m-social">-</td></tr>
+                    </tbody>
+                </table>
             </div>
 
             <!-- ATTENDANCE -->
             <div id="section-attendance" class="content-card">
                 <h2>Day-by-Day Attendance Record & Percentage</h2>
                 <div style="padding: 12px; background: #eef2f7; border-radius: 4px; margin-bottom: 15px; font-size: 15px; font-weight: bold; color: #1e3c72;">
-                    Overall Attendance Percentage: <span id="lbl-percentage">Calculing...</span>
+                    Overall Attendance Percentage: <span id="lbl-percentage">Calculating...</span>
                 </div>
                 <table class="att-history-table">
                     <thead>
@@ -151,16 +168,24 @@
                 classNum = studentId.substring(0, 1);
             }
 
-            // Fetch profile data
+            // Fetch profile & subject marks
             db.ref('students/' + studentId).once('value').then((snapshot) => {
                 const val = snapshot.val() || {};
                 document.getElementById("lbl-name").innerText = val.name || "Not updated yet";
-                document.getElementById("lbl-marks").innerText = val.marks || "No marks published yet";
+                
+                const marks = val.marks || {};
+                document.getElementById("m-telugu").innerText = marks.telugu || "-";
+                document.getElementById("m-english").innerText = marks.english || "-";
+                document.getElementById("m-hindi").innerText = marks.hindi || "-";
+                document.getElementById("m-maths").innerText = marks.maths || "-";
+                document.getElementById("m-science").innerText = marks.science || "-";
+                document.getElementById("m-social").innerText = marks.social || "-";
+
                 document.getElementById("lbl-fee").innerText = val.fee || "Not updated yet";
                 document.getElementById("lbl-remarks").innerText = val.remarks || "No remarks";
             });
 
-            // Fetch attendance and compute live percentage
+            // Fetch attendance & calculate live percentage
             db.ref('attendance/' + classNum).once('value').then((snapshot) => {
                 const datesData = snapshot.val() || {};
                 const tbody = document.getElementById("att-history-tbody");
@@ -186,7 +211,6 @@
                     } else if (status === "Absent") {
                         totalWorkingDays++;
                     }
-                    // Holidays are excluded from working days count
 
                     let tr = document.createElement("tr");
                     let badgeClass = status === "Present" ? "badge-present" : (status === "Absent" ? "badge-absent" : "badge-holiday");
