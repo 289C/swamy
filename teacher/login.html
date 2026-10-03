@@ -216,8 +216,8 @@
                 <!-- Holiday Banner View -->
                 <div id="attendance-holiday-container" style="display: none;">
                     <div class="holiday-banner">
-                        🎉 TODAY IS DECLARED AS A HOLIDAY!<br>
-                        <span style="font-size: 13px; font-weight: normal; color: #555;">Attendance cannot be edited as a holiday has been declared for today.</span>
+                        🎉 TODAY IS DECLARED AS A HOLIDAY FOR ALL SCHOOL!<br>
+                        <span style="font-size: 13px; font-weight: normal; color: #555;">Attendance cannot be opened or edited as a holiday has been declared for today.</span>
                     </div>
                     <button class="btn" onclick="undoHoliday()" style="background:#337ab7; margin-top:15px;">Cancel Holiday & Re-enable Attendance</button>
                 </div>
@@ -437,7 +437,6 @@
             db.ref(`attendance/${classNum}/${todayDateStr}`).once('value').then((snapshot) => {
                 const existingData = snapshot.val();
                 if (existingData) {
-                    // Check if any student record in this class for today is marked as "Holiday"
                     let isHoliday = false;
                     Object.keys(existingData).forEach(stId => {
                         if(existingData[stId] === "Holiday") isHoliday = true;
@@ -502,34 +501,22 @@
         }
 
         function promptHoliday() {
-            const classNum = document.getElementById("att-class").value;
-            if(!classNum) { alert("Please select a class first"); return; }
+            let confirmHoliday = confirm("Are you sure you want to declare today as a Holiday for the entire school?");
+            if (!confirmHoliday) return;
 
-            let choice = confirm("Click OK to declare Holiday for ALL SCHOOL (Classes 1 to 10), or Cancel for THIS CLASS ONLY.");
-            
-            if (choice) {
-                let updates = {};
-                for(let c = 1; c <= 10; c++) {
-                    let classRecords = {};
-                    for(let r = 1; r <= 30; r++) {
-                        classRecords[c + r.toString()] = "Holiday";
-                    }
-                    updates[c] = classRecords;
-                }
-                db.ref(`attendance`).update(updates).then(() => {
-                    alert("Holiday declared successfully for ALL SCHOOL!");
-                    checkTodayAttendanceStatus();
-                });
-            } else {
-                let records = {};
+            let updates = {};
+            for(let c = 1; c <= 10; c++) {
+                let classRecords = {};
                 for(let r = 1; r <= 30; r++) {
-                    records[classNum + r] = "Holiday";
+                    classRecords[c + r.toString()] = "Holiday";
                 }
-                db.ref(`attendance/${classNum}/${todayDateStr}`).set(records).then(() => {
-                    alert(`Holiday declared successfully for Class ${classNum} only.`);
-                    checkTodayAttendanceStatus();
-                });
+                updates[c] = classRecords;
             }
+
+            db.ref(`attendance`).update(updates).then(() => {
+                alert("Holiday declared successfully for all school!");
+                checkTodayAttendanceStatus();
+            });
         }
 
         function undoHoliday() {
