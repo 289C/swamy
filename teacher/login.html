@@ -79,6 +79,7 @@
         <div class="sidebar">
             <div class="menu-header">TEACHER MENU</div>
             <a class="menu-item active" onclick="switchTab('editor', this)">STUDENT DATA EDITOR</a>
+            <a class="menu-item" onclick="switchTab('fee', this)">FEE MANAGEMENT</a>
             <a class="menu-item" onclick="switchTab('attendance', this)">TODAY'S ATTENDANCE</a>
         </div>
 
@@ -106,10 +107,6 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="student-fee">Fee Status</label>
-                    <input type="text" id="student-fee" placeholder="e.g., Paid / Balance Due: ₹1,500">
-                </div>
-                <div class="form-group">
                     <label for="student-remarks">Teacher Remarks</label>
                     <textarea id="student-remarks" rows="2" placeholder="Enter remarks..."></textarea>
                 </div>
@@ -117,7 +114,28 @@
                 <div id="success-msg" class="success-msg">Data successfully saved!</div>
             </div>
 
-            <!-- TAB 2: Today's Attendance -->
+            <!-- TAB 2: Fee Management -->
+            <div id="tab-fee" class="content-card">
+                <h2>Fee Payment Recorder</h2>
+                <div class="form-group">
+                    <label for="fee-student-id">Enter Student ID (e.g., 51)</label>
+                    <input type="text" id="fee-student-id" placeholder="Type student ID..." oninput="fetchFeeStudentName()">
+                </div>
+                <div class="form-group">
+                    <label>Student Name: <strong id="fee-student-name" style="color:#6a1b9a;">-</strong></label>
+                </div>
+                <div class="form-group">
+                    <label for="fee-amount">Amount Paid (₹)</label>
+                    <input type="number" id="fee-amount" placeholder="e.g. 1000">
+                </div>
+                <div class="form-group">
+                    <label>Payment Date & Day: <strong id="fee-date-display" style="color:#6a1b9a;"></strong></label>
+                </div>
+                <button class="btn" onclick="recordFeePayment()">Record Payment</button>
+                <div id="fee-success-msg" class="success-msg">Fee payment recorded successfully!</div>
+            </div>
+
+            <!-- TAB 3: Today's Attendance -->
             <div id="tab-attendance" class="content-card">
                 <h2>First Period Attendance Manager (Today Only)</h2>
                 <div class="form-group">
@@ -189,8 +207,14 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const todayDateStr = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const todayDateStr = now.toISOString().split('T')[0];
+        const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+        const todayFullString = now.toLocaleDateString('en-US', options); // e.g. Saturday, Oct 3, 2026
+        const todayDayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+
         document.getElementById('today-date-display').innerText = todayDateStr;
+        document.getElementById('fee-date-display').innerText = `${todayDateStr} (${todayDayName})`;
 
         function switchTab(tabId, element) {
             document.querySelectorAll('.content-card').forEach(c => c.classList.remove('active'));
@@ -211,7 +235,6 @@
                 document.getElementById("mark-maths").value = (val.marks && val.marks.maths) || "";
                 document.getElementById("mark-science").value = (val.marks && val.marks.science) || "";
                 document.getElementById("mark-social").value = (val.marks && val.marks.social) || "";
-                document.getElementById("student-fee").value = val.fee || "";
                 document.getElementById("student-remarks").value = val.remarks || "";
             });
         }
@@ -232,13 +255,52 @@
             const data = {
                 name: document.getElementById("student-name").value,
                 marks: marksData,
-                fee: document.getElementById("student-fee").value,
                 remarks: document.getElementById("student-remarks").value
             };
 
             db.ref('students/' + id).update(data).then(() => {
                 const msg = document.getElementById("success-msg");
                 msg.style.display = "block";
+                setTimeout(() => msg.style.display = "none", 2500);
+            });
+        }
+
+        function fetchFeeStudentName() {
+            const id = document.getElementById("fee-student-id").value.trim();
+            if(!id) {
+                document.getElementById("fee-student-name").innerText = "-";
+                return;
+            }
+            db.ref('students/' + id).once('value').then((snapshot) => {
+                const val = snapshot.val();
+                if(val && val.name) {
+                    document.getElementById("fee-student-name").innerText = val.name;
+                } else {
+                    document.getElementById("fee-student-name").innerText = "Student record not found (Name unassigned)";
+                }
+            });
+        }
+
+        function recordFeePayment() {
+            const id = document.getElementById("fee-student-id").value.trim();
+            const amount = document.getElementById("fee-amount").value.trim();
+            if(!id || !amount) {
+                alert("Please enter both Student ID and Fee Amount.");
+                return;
+            }
+
+            const paymentRecord = {
+                amount: amount,
+                date: todayDateStr,
+                day: todayDayName,
+                timestamp: Date.now()
+            };
+
+            // Push to student's fee transactions ledger in Firebase
+            db.ref(`feeTransactions/${id}`).push(paymentRecord).then(() => {
+                const msg = document.getElementById("fee-success-msg");
+                msg.style.display = "block";
+                document.getElementById("fee-amount").value = "";
                 setTimeout(() => msg.style.display = "none", 2500);
             });
         }
