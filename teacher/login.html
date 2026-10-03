@@ -78,15 +78,16 @@
     <div class="main-layout">
         <div class="sidebar">
             <div class="menu-header">TEACHER MENU</div>
-            <a class="menu-item active" onclick="switchTab('editor', this)">STUDENT DATA EDITOR</a>
+            <a class="menu-item active" onclick="switchTab('editor', this)">STUDENT PROFILE</a>
+            <a class="menu-item" onclick="switchTab('marks', this)">EXAM MARKS (FA/SA)</a>
             <a class="menu-item" onclick="switchTab('fee', this)">FEE MANAGEMENT</a>
             <a class="menu-item" onclick="switchTab('attendance', this)">TODAY'S ATTENDANCE</a>
         </div>
 
         <div class="content-area">
-            <!-- TAB 1: Student Data Editor -->
+            <!-- TAB 1: Student Profile Editor -->
             <div id="tab-editor" class="content-card active">
-                <h2>Manage Student Details & Marks</h2>
+                <h2>Manage Student Profile & Remarks</h2>
                 <div class="form-group">
                     <label for="student-id">Enter Student ID first to load details (e.g., 51)</label>
                     <input type="text" id="student-id" placeholder="Type ID here..." oninput="fetchStudentData()">
@@ -95,38 +96,69 @@
                     <label for="student-name">Student Name</label>
                     <input type="text" id="student-name" placeholder="Full name">
                 </div>
-
-                <label style="display:block; font-weight:600; color:#333; margin-bottom:5px; font-size:13px;">Subject-Wise Marks</label>
-                <div class="marks-grid">
-                    <div class="form-group" style="margin-bottom:0;"><label>Telugu</label><input type="text" id="mark-telugu" placeholder="e.g. 95/100"></div>
-                    <div class="form-group" style="margin-bottom:0;"><label>English</label><input type="text" id="mark-english" placeholder="e.g. 90/100"></div>
-                    <div class="form-group" style="margin-bottom:0;"><label>Hindi</label><input type="text" id="mark-hindi" placeholder="e.g. 88/100"></div>
-                    <div class="form-group" style="margin-bottom:0;"><label>Maths</label><input type="text" id="mark-maths" placeholder="e.g. 98/100"></div>
-                    <div class="form-group" style="margin-bottom:0;"><label>Science</label><input type="text" id="mark-science" placeholder="e.g. 92/100"></div>
-                    <div class="form-group" style="margin-bottom:0;"><label>Social</label><input type="text" id="mark-social" placeholder="e.g. 89/100"></div>
-                </div>
-
                 <div class="form-group">
                     <label for="student-remarks">Teacher Remarks</label>
                     <textarea id="student-remarks" rows="2" placeholder="Enter remarks..."></textarea>
                 </div>
-                <button class="btn" onclick="saveData()">Save Details Permanently</button>
-                <div id="success-msg" class="success-msg">Data successfully saved!</div>
+                <button class="btn" onclick="saveProfileData()">Save Profile Permanently</button>
+                <div id="success-msg" class="success-msg">Profile successfully saved!</div>
             </div>
 
-            <!-- TAB 2: Fee Management -->
+            <!-- TAB 2: Exam Marks Editor (FA1, FA2, SA1, FA3, FA4, SA2) -->
+            <div id="tab-marks" class="content-card">
+                <h2>Exam Marks Manager (FA / SA)</h2>
+                <div class="form-group">
+                    <label for="marks-student-id">Enter Student ID (e.g., 51)</label>
+                    <input type="text" id="marks-student-id" placeholder="Type student ID to load marks..." oninput="fetchStudentMarks()">
+                </div>
+                <div class="form-group">
+                    <label for="exam-select">Select Exam</label>
+                    <select id="exam-select" onchange="populateExamInputs()">
+                        <option value="fa1">FA1 (Max 35 Marks per subject)</option>
+                        <option value="fa2">FA2 (Max 35 Marks per subject)</option>
+                        <option value="sa1">SA1 (Max 100 Marks per subject)</option>
+                        <option value="fa3">FA3 (Max 35 Marks per subject)</option>
+                        <option value="fa4">FA4 (Max 35 Marks per subject)</option>
+                        <option value="sa2">SA2 (Max 100 Marks per subject)</option>
+                    </select>
+                </div>
+
+                <label style="display:block; font-weight:600; color:#333; margin-bottom:5px; font-size:13px;" id="marks-label-hint">Subject-Wise Marks (FA Exam - Out of 35)</label>
+                <div class="marks-grid">
+                    <div class="form-group" style="margin-bottom:0;"><label>Telugu</label><input type="number" id="ex-telugu" placeholder="Marks"></div>
+                    <div class="form-group" style="margin-bottom:0;"><label>English</label><input type="number" id="ex-english" placeholder="Marks"></div>
+                    <div class="form-group" style="margin-bottom:0;"><label>Hindi</label><input type="number" id="ex-hindi" placeholder="Marks"></div>
+                    <div class="form-group" style="margin-bottom:0;"><label>Maths</label><input type="number" id="ex-maths" placeholder="Marks"></div>
+                    <div class="form-group" style="margin-bottom:0;"><label>Science</label><input type="number" id="ex-science" placeholder="Marks"></div>
+                    <div class="form-group" style="margin-bottom:0;"><label>Social</label><input type="number" id="ex-social" placeholder="Marks"></div>
+                </div>
+
+                <button class="btn" onclick="saveExamMarks()">Save Exam Marks</button>
+                <div id="marks-success-msg" class="success-msg">Exam marks saved successfully!</div>
+            </div>
+
+            <!-- TAB 3: Fee Management -->
             <div id="tab-fee" class="content-card">
-                <h2>Fee Payment Recorder</h2>
+                <h2>Fee Payment & Total Fee Manager</h2>
                 <div class="form-group">
                     <label for="fee-student-id">Enter Student ID (e.g., 51)</label>
-                    <input type="text" id="fee-student-id" placeholder="Type student ID..." oninput="fetchFeeStudentName()">
+                    <input type="text" id="fee-student-id" placeholder="Type student ID..." oninput="fetchFeeStudentData()">
                 </div>
                 <div class="form-group">
                     <label>Student Name: <strong id="fee-student-name" style="color:#6a1b9a;">-</strong></label>
                 </div>
                 <div class="form-group">
-                    <label for="fee-amount">Amount Paid (₹)</label>
-                    <input type="number" id="fee-amount" placeholder="e.g. 1000">
+                    <label for="total-fee-input">Total Course Fee (Default ₹20,000 - Editable)</label>
+                    <input type="number" id="total-fee-input" value="20000">
+                </div>
+                <button class="btn" onclick="saveTotalFee()" style="background:#337ab7;">Update Total Fee</button>
+                <div id="total-fee-success" class="success-msg">Total fee updated successfully!</div>
+
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;">
+
+                <div class="form-group">
+                    <label for="fee-amount">Record New Payment Amount Paid (₹)</label>
+                    <input type="number" id="fee-amount" placeholder="e.g. 5000">
                 </div>
                 <div class="form-group">
                     <label>Payment Date & Day: <strong id="fee-date-display" style="color:#6a1b9a;"></strong></label>
@@ -135,7 +167,7 @@
                 <div id="fee-success-msg" class="success-msg">Fee payment recorded successfully!</div>
             </div>
 
-            <!-- TAB 3: Today's Attendance -->
+            <!-- TAB 4: Today's Attendance -->
             <div id="tab-attendance" class="content-card">
                 <h2>First Period Attendance Manager (Today Only)</h2>
                 <div class="form-group">
@@ -158,7 +190,6 @@
                     <label>Date: <strong id="today-date-display" style="color:#6a1b9a;"></strong></label>
                 </div>
 
-                <!-- Active Submission View -->
                 <div id="attendance-active-container" style="display: none;">
                     <table class="att-table">
                         <thead>
@@ -174,7 +205,6 @@
                     <div id="att-success" class="success-msg">Attendance submitted successfully!</div>
                 </div>
 
-                <!-- Locked Submitted View -->
                 <div id="attendance-locked-container" style="display: none;">
                     <div style="padding: 12px; background: #e6fffa; border: 1px solid #b2f5ea; border-radius: 4px; margin-bottom: 10px; color: #234e52; font-weight: 600;">
                         ✅ Attendance for today has already been submitted and locked.
@@ -209,12 +239,12 @@
 
         const now = new Date();
         const todayDateStr = now.toISOString().split('T')[0];
-        const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
-        const todayFullString = now.toLocaleDateString('en-US', options); // e.g. Saturday, Oct 3, 2026
         const todayDayName = now.toLocaleDateString('en-US', { weekday: 'long' });
 
         document.getElementById('today-date-display').innerText = todayDateStr;
         document.getElementById('fee-date-display').innerText = `${todayDateStr} (${todayDayName})`;
+
+        let allStudentMarksCache = {};
 
         function switchTab(tabId, element) {
             document.querySelectorAll('.content-card').forEach(c => c.classList.remove('active'));
@@ -229,35 +259,17 @@
             db.ref('students/' + id).once('value').then((snapshot) => {
                 const val = snapshot.val() || {};
                 document.getElementById("student-name").value = val.name || "";
-                document.getElementById("mark-telugu").value = (val.marks && val.marks.telugu) || "";
-                document.getElementById("mark-english").value = (val.marks && val.marks.english) || "";
-                document.getElementById("mark-hindi").value = (val.marks && val.marks.hindi) || "";
-                document.getElementById("mark-maths").value = (val.marks && val.marks.maths) || "";
-                document.getElementById("mark-science").value = (val.marks && val.marks.science) || "";
-                document.getElementById("mark-social").value = (val.marks && val.marks.social) || "";
                 document.getElementById("student-remarks").value = val.remarks || "";
             });
         }
 
-        function saveData() {
+        function saveProfileData() {
             const id = document.getElementById("student-id").value.trim();
             if(!id) { alert("Please load or enter Student ID first"); return; }
-            
-            const marksData = {
-                telugu: document.getElementById("mark-telugu").value,
-                english: document.getElementById("mark-english").value,
-                hindi: document.getElementById("mark-hindi").value,
-                maths: document.getElementById("mark-maths").value,
-                science: document.getElementById("mark-science").value,
-                social: document.getElementById("mark-social").value
-            };
-
             const data = {
                 name: document.getElementById("student-name").value,
-                marks: marksData,
                 remarks: document.getElementById("student-remarks").value
             };
-
             db.ref('students/' + id).update(data).then(() => {
                 const msg = document.getElementById("success-msg");
                 msg.style.display = "block";
@@ -265,29 +277,90 @@
             });
         }
 
-        function fetchFeeStudentName() {
+        function fetchStudentMarks() {
+            const id = document.getElementById("marks-student-id").value.trim();
+            if(!id) return;
+            db.ref('exams/' + id).once('value').then((snapshot) => {
+                allStudentMarksCache = snapshot.val() || {};
+                populateExamInputs();
+            });
+        }
+
+        function populateExamInputs() {
+            const examType = document.getElementById("exam-select").value;
+            if(examType.startsWith('sa')) {
+                document.getElementById("marks-label-hint").innerText = "Subject-Wise Marks (SA Exam - Out of 100)";
+            } else {
+                document.getElementById("marks-label-hint").innerText = "Subject-Wise Marks (FA Exam - Out of 35)";
+            }
+
+            const examData = (allStudentMarksCache && allStudentMarksCache[examType]) || {};
+            document.getElementById("ex-telugu").value = examData.telugu || "";
+            document.getElementById("ex-english").value = examData.english || "";
+            document.getElementById("ex-hindi").value = examData.hindi || "";
+            document.getElementById("ex-maths").value = examData.maths || "";
+            document.getElementById("ex-science").value = examData.science || "";
+            document.getElementById("ex-social").value = examData.social || "";
+        }
+
+        function saveExamMarks() {
+            const id = document.getElementById("marks-student-id").value.trim();
+            const examType = document.getElementById("exam-select").value;
+            if(!id) { alert("Please enter Student ID"); return; }
+
+            const marksData = {
+                telugu: document.getElementById("ex-telugu").value,
+                english: document.getElementById("ex-english").value,
+                hindi: document.getElementById("ex-hindi").value,
+                maths: document.getElementById("ex-maths").value,
+                science: document.getElementById("ex-science").value,
+                social: document.getElementById("ex-social").value
+            };
+
+            db.ref(`exams/${id}/${examType}`).set(marksData).then(() => {
+                if(!allStudentMarksCache) allStudentMarksCache = {};
+                allStudentMarksCache[examType] = marksData;
+                const msg = document.getElementById("marks-success-msg");
+                msg.style.display = "block";
+                setTimeout(() => msg.style.display = "none", 2500);
+            });
+        }
+
+        function fetchFeeStudentData() {
             const id = document.getElementById("fee-student-id").value.trim();
             if(!id) {
                 document.getElementById("fee-student-name").innerText = "-";
+                document.getElementById("total-fee-input").value = "20000";
                 return;
             }
             db.ref('students/' + id).once('value').then((snapshot) => {
                 const val = snapshot.val();
-                if(val && val.name) {
-                    document.getElementById("fee-student-name").innerText = val.name;
+                if(val) {
+                    document.getElementById("fee-student-name").innerText = val.name || "Unnamed";
+                    document.getElementById("total-fee-input").value = val.totalFee || 20000;
                 } else {
-                    document.getElementById("fee-student-name").innerText = "Student record not found (Name unassigned)";
+                    document.getElementById("fee-student-name").innerText = "Not found";
+                    document.getElementById("total-fee-input").value = 20000;
                 }
+            });
+        }
+
+        function saveTotalFee() {
+            const id = document.getElementById("fee-student-id").value.trim();
+            const totalFee = document.getElementById("total-fee-input").value.trim();
+            if(!id) { alert("Please enter Student ID"); return; }
+
+            db.ref('students/' + id).update({ totalFee: totalFee }).then(() => {
+                const msg = document.getElementById("total-fee-success");
+                msg.style.display = "block";
+                setTimeout(() => msg.style.display = "none", 2500);
             });
         }
 
         function recordFeePayment() {
             const id = document.getElementById("fee-student-id").value.trim();
             const amount = document.getElementById("fee-amount").value.trim();
-            if(!id || !amount) {
-                alert("Please enter both Student ID and Fee Amount.");
-                return;
-            }
+            if(!id || !amount) { alert("Enter Student ID and Amount"); return; }
 
             const paymentRecord = {
                 amount: amount,
@@ -296,7 +369,6 @@
                 timestamp: Date.now()
             };
 
-            // Push to student's fee transactions ledger in Firebase
             db.ref(`feeTransactions/${id}`).push(paymentRecord).then(() => {
                 const msg = document.getElementById("fee-success-msg");
                 msg.style.display = "block";
@@ -315,15 +387,12 @@
 
             db.ref(`attendance/${classNum}/${todayDateStr}`).once('value').then((snapshot) => {
                 const existingData = snapshot.val();
-                
                 if (existingData) {
                     document.getElementById("attendance-active-container").style.display = "none";
                     document.getElementById("attendance-locked-container").style.display = "block";
-                    
                     const ul = document.getElementById("absentee-ul");
                     ul.innerHTML = "";
                     let absenteesFound = false;
-
                     Object.keys(existingData).forEach(studentId => {
                         if (existingData[studentId] === "Absent") {
                             absenteesFound = true;
@@ -335,14 +404,10 @@
                             absenteesFound = true;
                         }
                     });
-
-                    if(!absenteesFound) {
-                        ul.innerHTML = `<li>No absentees today (All students present!).</li>`;
-                    }
+                    if(!absenteesFound) ul.innerHTML = `<li>No absentees today (All present!).</li>`;
                 } else {
                     document.getElementById("attendance-locked-container").style.display = "none";
                     document.getElementById("attendance-active-container").style.display = "block";
-                    
                     const tbody = document.getElementById("att-tbody");
                     tbody.innerHTML = "";
                     for(let r = 1; r <= 30; r++) {
@@ -366,30 +431,21 @@
         function submitAttendance() {
             const classNum = document.getElementById("att-class").value;
             if(!classNum) return;
-
             let attendanceRecords = {};
             for(let r = 1; r <= 30; r++) {
                 let studentId = classNum + r;
-                let status = document.querySelector(`input[name="att-${studentId}"]:checked`).value;
-                attendanceRecords[studentId] = status;
+                attendanceRecords[studentId] = document.querySelector(`input[name="att-${studentId}"]:checked`).value;
             }
-
-            db.ref(`attendance/${classNum}/${todayDateStr}`).set(attendanceRecords).then(() => {
-                checkTodayAttendanceStatus();
-            });
+            db.ref(`attendance/${classNum}/${todayDateStr}`).set(attendanceRecords).then(() => checkTodayAttendanceStatus());
         }
 
         function declareHoliday() {
             const classNum = document.getElementById("att-class").value;
-            if(!classNum) { alert("Please select a class first"); return; }
-
+            if(!classNum) { alert("Select a class first"); return; }
             let records = {};
-            for(let r = 1; r <= 30; r++) {
-                records[classNum + r] = "Holiday";
-            }
-
+            for(let r = 1; r <= 30; r++) records[classNum + r] = "Holiday";
             db.ref(`attendance/${classNum}/${todayDateStr}`).set(records).then(() => {
-                alert("Holiday declared successfully for today.");
+                alert("Holiday declared successfully.");
                 checkTodayAttendanceStatus();
             });
         }
