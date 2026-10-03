@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Portal - Swamy School</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f9; display: flex; flex-direction: column; min-height: 100vh; }
+        .header { background: #6a1b9a; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 20px; }
+        .logout-btn { background: #d9534f; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .container { flex: 1; max-width: 650px; width: 100%; margin: 30px auto; padding: 0 15px; }
+        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .card h2 { color: #6a1b9a; margin-bottom: 15px; font-size: 20px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: 600; color: #333; margin-bottom: 5px; font-size: 14px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        .btn { background: #6a1b9a; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; }
+        .btn:hover { background: #4a126d; }
+        .success-msg { color: #28a745; font-weight: 600; margin-top: 10px; text-align: center; display: none; }
+    </style>
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Teacher Portal - Swamy School</h1>
+        <button class="logout-btn" onclick="location.href='../index.html'">Logout</button>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>Update Student Record (Cloud Database)</h2>
+            <div class="form-group">
+                <label for="student-id">Enter Student ID (e.g. 51)</label>
+                <input type="text" id="student-id" placeholder="Type ID to fetch/update data" oninput="fetchStudentData()">
+            </div>
+            <div class="form-group">
+                <label for="student-name">Student Name</label>
+                <input type="text" id="student-name" placeholder="Full Name">
+            </div>
+            <div class="form-group">
+                <label for="student-attendance">Attendance</label>
+                <input type="text" id="student-attendance" placeholder="e.g. 95% (Present)">
+            </div>
+            <div class="form-group">
+                <label for="student-marks">Marks / Report</label>
+                <input type="text" id="student-marks" placeholder="e.g. Math: 90, Science: 85">
+            </div>
+            <div class="form-group">
+                <label for="student-fee">Fee Status</label>
+                <input type="text" id="student-fee" placeholder="e.g. Paid / Balance: ₹2,000">
+            </div>
+            <div class="form-group">
+                <label for="student-remarks">Remarks</label>
+                <textarea id="student-remarks" rows="3" placeholder="Teacher notes..."></textarea>
+            </div>
+            <button class="btn" onclick="saveData()">Save Permanently to Cloud</button>
+            <div id="success-msg" class="success-msg">Data successfully saved to cloud!</div>
+        </div>
+    </div>
+
+    <script>
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBzLchy5M2fLne4c7Ghw1KNN8wVrlZdd8M",
+            authDomain: "friendsgame-872f5.firebaseapp.com",
+            databaseURL: "https://friendsgame-872f5-default-rtdb.firebaseio.com",
+            projectId: "friendsgame-872f5",
+            storageBucket: "friendsgame-872f5.firebasestorage.app",
+            messagingSenderId: "522534013233",
+            appId: "1:522534013233:web:f5faa6e6795023d0420810",
+            measurementId: "G-PW5H3G97QR"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function fetchStudentData() {
+            const id = document.getElementById("student-id").value.trim();
+            if(!id) return;
+            db.ref('students/' + id).once('value').then((snapshot) => {
+                const val = snapshot.val();
+                if(val) {
+                    document.getElementById("student-name").value = val.name || "";
+                    document.getElementById("student-attendance").value = val.attendance || "";
+                    document.getElementById("student-marks").value = val.marks || "";
+                    document.getElementById("student-fee").value = val.fee || "";
+                    document.getElementById("student-remarks").value = val.remarks || "";
+                } else {
+                    document.getElementById("student-name").value = "";
+                    document.getElementById("student-attendance").value = "";
+                    document.getElementById("student-marks").value = "";
+                    document.getElementById("student-fee").value = "";
+                    document.getElementById("student-remarks").value = "";
+                }
+            });
+        }
+
+        function saveData() {
+            const id = document.getElementById("student-id").value.trim();
+            if(!id) {
+                alert("Please enter a student ID");
+                return;
+            }
+
+            const data = {
+                name: document.getElementById("student-name").value,
+                attendance: document.getElementById("student-attendance").value,
+                marks: document.getElementById("student-marks").value,
+                fee: document.getElementById("student-fee").value,
+                remarks: document.getElementById("student-remarks").value
+            };
+
+            db.ref('students/' + id).set(data).then(() => {
+                const msg = document.getElementById("success-msg");
+                msg.style.display = "block";
+                setTimeout(() => msg.style.display = "none", 2500);
+            });
+        }
+    </script>
+</body>
+</html>
