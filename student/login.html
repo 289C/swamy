@@ -97,9 +97,9 @@
                 </div>
             </div>
 
-            <!-- ATTENDANCE -->
+            <!-- ATTENDANCE (Month-wise active records only) -->
             <div id="section-attendance" class="content-card">
-                <h2>Day-by-Day Attendance Record & Percentage</h2>
+                <h2>Attendance Record & Percentage</h2>
                 <div style="padding: 12px; background: #eef2f7; border-radius: 4px; margin-bottom: 15px; font-size: 15px; font-weight: bold; color: #1e3c72;">
                     Overall Attendance Percentage: <span id="lbl-percentage">Calculating...</span>
                 </div>
@@ -199,7 +199,7 @@
                 document.getElementById("lbl-remarks").innerText = val.remarks || "No remarks";
             });
 
-            // Fetch Exam Marks and calculate percentages
+            // Fetch Exam Marks
             db.ref('exams/' + studentId).once('value').then((snapshot) => {
                 const examsData = snapshot.val();
                 const marksContainer = document.getElementById("marks-container");
@@ -262,7 +262,7 @@
                 });
             });
 
-            // Fetch Fee Transactions Ledger & calculate remaining balance
+            // Fetch Fee Transactions
             db.ref('students/' + studentId).once('value').then((snap) => {
                 const sVal = snap.val() || {};
                 const totalFee = parseFloat(sVal.totalFee || 20000);
@@ -298,47 +298,52 @@
                 });
             });
 
-            // Fetch attendance & calculate live percentage
+            // Fetch Attendance & display active records only
             db.ref('attendance/' + classNum).once('value').then((snapshot) => {
                 const datesData = snapshot.val() || {};
                 const tbody = document.getElementById("att-history-tbody");
                 tbody.innerHTML = "";
 
                 const dates = Object.keys(datesData).sort().reverse();
-                if (dates.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="2">No attendance records found yet.</td></tr>`;
-                    document.getElementById("lbl-percentage").innerText = "N/A";
-                    return;
-                }
-
+                let activeRecordsCount = 0;
                 let totalWorkingDays = 0;
                 let totalPresentDays = 0;
 
                 dates.forEach(date => {
                     const classAttendanceOnDate = datesData[date];
-                    const status = classAttendanceOnDate[studentId] || "Not Marked";
-                    
-                    if (status === "Present") {
-                        totalWorkingDays++;
-                        totalPresentDays++;
-                    } else if (status === "Absent") {
-                        totalWorkingDays++;
-                    }
+                    const status = classAttendanceOnDate[studentId];
 
-                    let tr = document.createElement("tr");
-                    let badgeClass = status === "Present" ? "badge-present" : (status === "Absent" ? "badge-absent" : "badge-holiday");
-                    tr.innerHTML = `
-                        <td>${date}</td>
-                        <td><span class="${badgeClass}">${status}</span></td>
-                    `;
-                    tbody.appendChild(tr);
+                    // Only show rows where teacher has actually marked Present, Absent, or Holiday
+                    if (status === "Present" || status === "Absent" || status === "Holiday") {
+                        activeRecordsCount++;
+                        if (status === "Present") {
+                            totalWorkingDays++;
+                            totalPresentDays++;
+                        } else if (status === "Absent") {
+                            totalWorkingDays++;
+                        }
+
+                        let tr = document.createElement("tr");
+                        let badgeClass = status === "Present" ? "badge-present" : (status === "Absent" ? "badge-absent" : "badge-holiday");
+                        tr.innerHTML = `
+                            <td>${date}</td>
+                            <td><span class="${badgeClass}">${status}</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
                 });
+
+                if (activeRecordsCount === 0) {
+                    tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#666;">No attendance records published by teacher yet.</td></tr>`;
+                    document.getElementById("lbl-percentage").innerText = "N/A";
+                    return;
+                }
 
                 if (totalWorkingDays > 0) {
                     let percentage = ((totalPresentDays / totalWorkingDays) * 100).toFixed(2);
-                    document.getElementById("lbl-percentage").innerText = percentage + "% (" + totalPresentDays + " / " + totalWorkingDays + " days)";
+                    document.getElementById("lbl-percentage").innerText = percentage + "% (" + totalPresentDays + " / " + totalWorkingDays + " working days)";
                 } else {
-                    document.getElementById("lbl-percentage").innerText = "100% (No working days counted yet)";
+                    document.getElementById("lbl-percentage").innerText = "100% (No working days recorded yet)";
                 }
             });
         }
