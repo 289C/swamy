@@ -19,43 +19,43 @@
             min-height: 100vh;
         }
 
-        /* Top Marquee Notice */
-        .marquee-container {
-            background-color: #d9534f;
-            color: #ffffff;
-            padding: 8px 0;
-            font-size: 14px;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            box-shadow: inset 0 -2px 5px rgba(0,0,0,0.1);
-        }
-
-        .marquee-container marquee {
-            width: 100%;
-        }
-
-        /* Header Section */
+        /* School Header Section */
         .school-banner {
             background: #ffffff;
             border-bottom: 3px solid #1e3c72;
-            padding: 15px 20px;
+            padding: 20px 15px;
             text-align: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
         .school-banner h1 {
             color: #1e3c72;
-            font-size: 26px;
+            font-size: 24px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             margin-bottom: 5px;
         }
 
         .school-banner p {
             color: #555;
+            font-size: 12px;
+            margin: 3px 0;
+        }
+
+        /* Scrolling Notice Banner directly below headline */
+        .marquee-container {
+            background-color: #d9534f;
+            color: #ffffff;
+            padding: 8px 10px;
             font-size: 13px;
-            margin: 2px 0;
+            font-weight: 600;
+            overflow: hidden;
+            white-space: nowrap;
+            box-shadow: inset 0 -2px 5px rgba(0,0,0,0.1);
+        }
+
+        .marquee-container marquee {
+            width: 100%;
         }
 
         /* Main Content Layout */
@@ -64,24 +64,25 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 30px 20px;
+            padding: 30px 15px;
         }
 
         .login-grid {
             display: flex;
-            gap: 30px;
+            gap: 25px;
             flex-wrap: wrap;
             justify-content: center;
-            max-width: 800px;
+            max-width: 750px;
             width: 100%;
         }
 
         /* Login Card Boxes */
         .login-card {
             background: #ffffff;
-            border-radius: 10px;
+            border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            width: 320px;
+            width: 100%;
+            max-width: 320px;
             overflow: hidden;
             border-top: 5px solid #1e3c72;
             transition: transform 0.2s;
@@ -103,12 +104,12 @@
             color: white;
             padding: 12px;
             text-align: center;
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 600;
         }
 
         .card-body {
-            padding: 25px 20px;
+            padding: 20px;
         }
 
         .form-group {
@@ -173,6 +174,36 @@
             display: none;
         }
 
+        /* Map Section Styling */
+        .map-section {
+            background: #ffffff;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #ddd;
+        }
+
+        .map-section h3 {
+            color: #1e3c72;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .map-container {
+            width: 100%;
+            max-width: 800px;
+            height: 250px;
+            margin: 0 auto;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .map-container iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
         /* Footer */
         .footer {
             background: #1e3c72;
@@ -185,13 +216,6 @@
 </head>
 <body>
 
-    <!-- Scrolling Notice Banner -->
-    <div class="marquee-container">
-        <marquee behavior="scroll" direction="left">
-            *** Welcome to Swamy English Medium High School Portal - Please enter your valid credentials to access the student or teacher portal. ***
-        </marquee>
-    </div>
-
     <!-- School Header Details -->
     <div class="school-banner">
         <h1>Swamy English Medium High School</h1>
@@ -199,12 +223,19 @@
         <p>Opp. 3 APSP, Anjaneya Nagar, Kakinada - 533 005 | Mob: 98483 50583</p>
     </div>
 
-    <!-- Main Section with Login Cards -->
+    <!-- Scrolling Notice Banner directly below the headlines -->
+    <div class="marquee-container">
+        <marquee behavior="scroll" direction="left">
+            *** Welcome to Swamy English Medium High School Portal — Please enter your valid username and password to log in. ***
+        </marquee>
+    </div>
+
+    <!-- Main Section with Side-by-Side Login Cards -->
     <div class="main-container">
         <div class="login-grid">
             
             <!-- Teacher Login Box -->
-            <div class="login-card" style="border-top-color: #6a1b9a;">
+            <div class="login-card">
                 <div class="card-header card-header-teacher">Teacher Login</div>
                 <div class="card-body">
                     <form onsubmit="handleTeacherLogin(event)">
@@ -223,24 +254,37 @@
             </div>
 
             <!-- Student Login Box -->
-            <div class="login-card" style="border-top-color: #e65100;">
+            <div class="login-card">
                 <div class="card-header card-header-student">Student Login</div>
                 <div class="card-body">
                     <form onsubmit="handleStudentLogin(event)">
                         <div class="form-group">
                             <label for="student-user">User Name</label>
-                            <input type="text" id="student-user" placeholder="Enter username/ID" required>
+                            <input type="text" id="student-user" placeholder="Enter username" required>
                         </div>
                         <div class="form-group">
                             <label for="student-pass">Password</label>
                             <input type="password" id="student-pass" placeholder="Enter password" required>
                         </div>
                         <button type="submit" class="login-btn login-btn-student">LOGIN</button>
-                        <div id="student-error" class="error-msg">Invalid ID or password.</div>
+                        <div id="student-error" class="error-msg">Invalid username or password.</div>
                     </form>
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- Google Map Location Section -->
+    <div class="map-section">
+        <h3>Our School Location</h3>
+        <div class="map-container">
+            <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3819.8519455322967!2d82.2384!3d16.9458!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a38283a00000001%3A0x0!2zVuKAmXMgQVBTUCwgQW5qYW5leWEgTmFnYXIsIEtha2luYWRh!5e0!3m2!1sen!2sin!4v1690000000000!5m2!1sen!2sin" 
+                allowfullscreen="" 
+                loading="lazy" 
+                referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
         </div>
     </div>
 
@@ -257,6 +301,7 @@
             const errorMsg = document.getElementById('student-error');
 
             const userIdNum = parseInt(userIdStr, 10);
+            // Validates student IDs from 1 to 600 and password "webcap" without showing hints to users
             const isValidIdRange = !isNaN(userIdNum) && userIdNum >= 1 && userIdNum <= 600;
             
             if (isValidIdRange && password === "webcap") {
