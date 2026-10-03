@@ -32,12 +32,17 @@
         .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
         .btn { background: #6a1b9a; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; }
         .btn:hover { background: #4a126d; }
+        .btn-holiday { background: #d9534f; margin-top: 15px; }
+        .btn-holiday:hover { background: #c9302c; }
         .success-msg { color: #28a745; font-weight: 600; margin-top: 10px; text-align: center; display: none; }
 
         .att-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .att-table th, .att-table td { border: 1px solid #ddd; padding: 8px 12px; font-size: 13px; text-align: left; }
         .att-table th { background-color: #f5f5f5; }
         .status-select { padding: 5px; border-radius: 4px; font-weight: 600; }
+
+        .absent-list-box { background: #fff5f5; border: 1px solid #feb2b2; padding: 15px; border-radius: 4px; margin-top: 15px; }
+        .absent-list-box h3 { color: #c53030; font-size: 15px; margin-bottom: 8px; }
 
         .footer { background: #1e3c72; color: white; text-align: center; padding: 10px; font-size: 11px; }
 
@@ -68,7 +73,7 @@
         <div class="sidebar">
             <div class="menu-header">TEACHER MENU</div>
             <a class="menu-item active" onclick="switchTab('editor', this)">STUDENT DATA EDITOR</a>
-            <a class="menu-item" onclick="switchTab('attendance', this)">DAILY ATTENDANCE</a>
+            <a class="menu-item" onclick="switchTab('attendance', this)">TODAY'S ATTENDANCE</a>
         </div>
 
         <div class="content-area">
@@ -76,8 +81,8 @@
             <div id="tab-editor" class="content-card active">
                 <h2>Manage Student Academic & Fee Details</h2>
                 <div class="form-group">
-                    <label for="student-id">Student ID / Username (e.g., 51)</label>
-                    <input type="text" id="student-id" placeholder="Type ID to fetch or create data" oninput="fetchStudentData()">
+                    <label for="student-id">Select / Enter Student ID (e.g., 51)</label>
+                    <input type="text" id="student-id" placeholder="Type ID to load details first..." oninput="fetchStudentData()">
                 </div>
                 <div class="form-group">
                     <label for="student-name">Student Name</label>
@@ -99,12 +104,12 @@
                 <div id="success-msg" class="success-msg">Data successfully saved!</div>
             </div>
 
-            <!-- TAB 2: Daily Attendance -->
+            <!-- TAB 2: Today's Attendance -->
             <div id="tab-attendance" class="content-card">
-                <h2>First Period Attendance Manager</h2>
+                <h2>First Period Attendance Manager (Today Only)</h2>
                 <div class="form-group">
                     <label for="att-class">Select Class</label>
-                    <select id="att-class" onchange="loadClassStudents()">
+                    <select id="att-class" onchange="checkTodayAttendanceStatus()">
                         <option value="">-- Choose Class --</option>
                         <option value="1">Class 1</option>
                         <option value="2">Class 2</option>
@@ -119,11 +124,11 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="att-date">Attendance Date</label>
-                    <input type="date" id="att-date" onchange="loadClassStudents()">
+                    <label>Date: <strong id="today-date-display" style="color:#6a1b9a;"></strong></label>
                 </div>
 
-                <div id="attendance-container" style="display: none;">
+                <!-- Active Submission View -->
+                <div id="attendance-active-container" style="display: none;">
                     <table class="att-table">
                         <thead>
                             <tr>
@@ -131,12 +136,23 @@
                                 <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody id="att-tbody">
-                            <!-- Populated dynamically -->
-                        </tbody>
+                        <tbody id="att-tbody"></tbody>
                     </table>
                     <button class="btn" onclick="submitAttendance()">Submit Today's Attendance</button>
-                    <div id="att-success" class="success-msg">Attendance recorded successfully for this date!</div>
+                    <button class="btn btn-holiday" onclick="declareHoliday()">Declare Holiday For Today</button>
+                    <div id="att-success" class="success-msg">Attendance submitted successfully!</div>
+                </div>
+
+                <!-- Locked Submitted View (Shows Absentees Only) -->
+                <div id="attendance-locked-container" style="display: none;">
+                    <div style="padding: 12px; background: #e6fffa; border: 1px solid #b2f5ea; border-radius: 4px; margin-bottom: 10px; color: #234e52; font-weight: 600;">
+                        ✅ Attendance for today has already been submitted and locked.
+                    </div>
+                    <div class="absent-list-box">
+                        <h3>Today's Absentees List:</h3>
+                        <ul id="absentee-ul" style="padding-left: 20px; font-size: 14px; color: #2d3748;"></ul>
+                    </div>
+                    <button class="btn btn-holiday" onclick="declareHoliday()" style="margin-top: 15px;">Change to Holiday</button>
                 </div>
             </div>
         </div>
@@ -160,8 +176,9 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Set today's date by default
-        document.getElementById('att-date').valueAsDate = new Date();
+        // Get strict today's date formatted as YYYY-MM-DD
+        const todayDateStr = new Date().toISOString().split('T')[0];
+        document.getElementById('today-date-display').innerText = todayDateStr;
 
         function switchTab(tabId, element) {
             document.querySelectorAll('.content-card').forEach(c => c.classList.remove('active'));
@@ -184,7 +201,7 @@
 
         function saveData() {
             const id = document.getElementById("student-id").value.trim();
-            if(!id) { alert("Enter Student ID"); return; }
+            if(!id) { alert("Please load or enter Student ID first"); return; }
             const data = {
                 name: document.getElementById("student-name").value,
                 marks: document.getElementById("student-marks").value,
@@ -198,44 +215,69 @@
             });
         }
 
-        function loadClassStudents() {
+        function checkTodayAttendanceStatus() {
             const classNum = document.getElementById("att-class").value;
-            const dateStr = document.getElementById("att-date").value;
-            if(!classNum || !dateStr) return;
+            if(!classNum) {
+                document.getElementById("attendance-active-container").style.display = "none";
+                document.getElementById("attendance-locked-container").style.display = "none";
+                return;
+            }
 
-            document.getElementById("attendance-container").style.display = "block";
-            const tbody = document.getElementById("att-tbody");
-            tbody.innerHTML = "Loading...";
+            db.ref(`attendance/${classNum}/${todayDateStr}`).once('value').then((snapshot) => {
+                const existingData = snapshot.val();
+                
+                if (existingData) {
+                    // Already submitted: Show Locked View with Absentees Only
+                    document.getElementById("attendance-active-container").style.display = "none";
+                    document.getElementById("attendance-locked-container").style.display = "block";
+                    
+                    const ul = document.getElementById("absentee-ul");
+                    ul.innerHTML = "";
+                    let absenteesFound = false;
 
-            // Fetch existing attendance for this class and date if already submitted
-            db.ref(`attendance/${classNum}/${dateStr}`).once('value').then((snapshot) => {
-                const existingData = snapshot.val() || {};
-                tbody.innerHTML = "";
+                    Object.keys(existingData).forEach(studentId => {
+                        if (existingData[studentId] === "Absent") {
+                            absenteesFound = true;
+                            let li = document.createElement("li");
+                            li.innerText = `Student ID: ${studentId}`;
+                            ul.appendChild(li);
+                        } else if (existingData[studentId] === "Holiday") {
+                            ul.innerHTML = `<li style="color:#d9534f; font-weight:bold;">Today is declared as a Holiday!</li>`;
+                            absenteesFound = true;
+                        }
+                    });
 
-                // Generate 30 students for the selected class
-                for(let r = 1; r <= 30; r++) {
-                    let studentId = classNum + r;
-                    let currentStatus = existingData[studentId] || "Present";
-
-                    let tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td><strong>ID: ${studentId}</strong> (Roll ${r})</td>
-                        <td>
-                            <select class="status-select" id="status-${studentId}">
-                                <option value="Present" ${currentStatus === "Present" ? "selected" : ""}>Present</option>
-                                <option value="Absent" ${currentStatus === "Absent" ? "selected" : ""}>Absent</option>
-                            </select>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
+                    if(!absenteesFound) {
+                        ul.innerHTML = `<li>No absentees today (All students present!).</li>`;
+                    }
+                } else {
+                    // Not submitted yet: Open active form for today
+                    document.getElementById("attendance-locked-container").style.display = "none";
+                    document.getElementById("attendance-active-container").style.display = "block";
+                    
+                    const tbody = document.getElementById("att-tbody");
+                    tbody.innerHTML = "";
+                    for(let r = 1; r <= 30; r++) {
+                        let studentId = classNum + r;
+                        let tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td><strong>ID: ${studentId}</strong> (Roll ${r})</td>
+                            <td>
+                                <select class="status-select" id="status-${studentId}">
+                                    <option value="Present">Present</option>
+                                    <option value="Absent">Absent</option>
+                                </select>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
                 }
             });
         }
 
         function submitAttendance() {
             const classNum = document.getElementById("att-class").value;
-            const dateStr = document.getElementById("att-date").value;
-            if(!classNum || !dateStr) return;
+            if(!classNum) return;
 
             let attendanceRecords = {};
             for(let r = 1; r <= 30; r++) {
@@ -244,10 +286,25 @@
                 attendanceRecords[studentId] = status;
             }
 
-            db.ref(`attendance/${classNum}/${dateStr}`).set(attendanceRecords).then(() => {
-                const msg = document.getElementById("att-success");
-                msg.style.display = "block";
-                setTimeout(() => msg.style.display = "none", 2500);
+            db.ref(`attendance/${classNum}/${todayDateStr}`).set(attendanceRecords).then(() => {
+                checkTodayAttendanceStatus();
+            });
+        }
+
+        function declareHoliday() {
+            const classNum = document.getElementById("att-class").value;
+            if(!classNum) { alert("Please select a class first"); return; }
+
+            let holidayRecord = { status: "Holiday" };
+            // Mark all 30 students as Holiday for this date
+            let records = {};
+            for(let r = 1; r <= 30; r++) {
+                records[classNum + r] = "Holiday";
+            }
+
+            db.ref(`attendance/${classNum}/${todayDateStr}`).set(records).then(() => {
+                alert("Holiday declared successfully for today.");
+                checkTodayAttendanceStatus();
             });
         }
     </script>
