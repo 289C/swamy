@@ -35,7 +35,7 @@
 
         .btn { background: #6a1b9a; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; }
         .btn:hover { background: #4a126d; }
-        .btn-holiday { background: #d9534f; margin-top: 15px; }
+        .btn-holiday { background: #d9534f; margin-bottom: 15px; }
         .btn-holiday:hover { background: #c9302c; }
         .success-msg { color: #28a745; font-weight: 600; margin-top: 10px; text-align: center; display: none; }
 
@@ -53,7 +53,7 @@
         .absent-list-box { background: #fff5f5; border: 1px solid #feb2b2; padding: 15px; border-radius: 4px; margin-top: 15px; }
         .absent-list-box h3 { color: #c53030; font-size: 15px; margin-bottom: 8px; }
 
-        .holiday-banner { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 4px; font-weight: bold; text-align: center; font-size: 16px; margin-top: 10px; }
+        .holiday-banner { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 20px; border-radius: 4px; font-weight: bold; text-align: center; font-size: 16px; margin-top: 15px; }
 
         .footer { background: #1e3c72; color: white; text-align: center; padding: 10px; font-size: 11px; }
 
@@ -88,7 +88,7 @@
             <a class="menu-item active" onclick="switchTab('editor', this)">STUDENT PROFILE</a>
             <a class="menu-item" onclick="switchTab('marks', this)">EXAM MARKS (FA/SA)</a>
             <a class="menu-item" onclick="switchTab('fee', this)">FEE MANAGEMENT</a>
-            <a class="menu-item" onclick="switchTab('attendance', this)">TODAY'S ATTENDANCE</a>
+            <a class="menu-item" onclick="switchTab('attendance', this)" onclick="checkGlobalHoliday()">TODAY'S ATTENDANCE</a>
         </div>
 
         <div class="content-area">
@@ -193,25 +193,9 @@
             <!-- TAB 4: Today's Attendance -->
             <div id="tab-attendance" class="content-card">
                 <h2>First Period Attendance Manager (Today Only)</h2>
-                <div class="form-group">
-                    <label for="att-class">Select Class</label>
-                    <select id="att-class" onchange="checkTodayAttendanceStatus()">
-                        <option value="">-- Choose Class --</option>
-                        <option value="1">Class 1</option>
-                        <option value="2">Class 2</option>
-                        <option value="3">Class 3</option>
-                        <option value="4">Class 4</option>
-                        <option value="5">Class 5</option>
-                        <option value="6">Class 6</option>
-                        <option value="7">Class 7</option>
-                        <option value="8">Class 8</option>
-                        <option value="9">Class 9</option>
-                        <option value="10">Class 10</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Date: <strong id="today-date-display" style="color:#6a1b9a;"></strong></label>
-                </div>
+                
+                <!-- Holiday Declare Button (Always on top before choosing class) -->
+                <button class="btn btn-holiday" onclick="promptHoliday()">Declare Holiday For Today (All School)</button>
 
                 <!-- Holiday Banner View -->
                 <div id="attendance-holiday-container" style="display: none;">
@@ -220,6 +204,29 @@
                         <span style="font-size: 13px; font-weight: normal; color: #555;">Attendance cannot be opened or edited as a holiday has been declared for today.</span>
                     </div>
                     <button class="btn" onclick="undoHoliday()" style="background:#337ab7; margin-top:15px;">Cancel Holiday & Re-enable Attendance</button>
+                </div>
+
+                <!-- Choose Class Section -->
+                <div id="attendance-selection-box">
+                    <div class="form-group">
+                        <label for="att-class">Select Class</label>
+                        <select id="att-class" onchange="checkTodayAttendanceStatus()">
+                            <option value="">-- Choose Class --</option>
+                            <option value="1">Class 1</option>
+                            <option value="2">Class 2</option>
+                            <option value="3">Class 3</option>
+                            <option value="4">Class 4</option>
+                            <option value="5">Class 5</option>
+                            <option value="6">Class 6</option>
+                            <option value="7">Class 7</option>
+                            <option value="8">Class 8</option>
+                            <option value="9">Class 9</option>
+                            <option value="10">Class 10</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date: <strong id="today-date-display" style="color:#6a1b9a;"></strong></label>
+                    </div>
                 </div>
 
                 <!-- Active Submission View -->
@@ -234,7 +241,6 @@
                         <tbody id="att-tbody"></tbody>
                     </table>
                     <button class="btn" onclick="submitAttendance()">Submit Today's Attendance</button>
-                    <button class="btn btn-holiday" onclick="promptHoliday()">Declare Holiday For Today</button>
                     <div id="att-success" class="success-msg">Attendance submitted successfully!</div>
                 </div>
 
@@ -247,7 +253,6 @@
                         <h3>Today's Absentees List:</h3>
                         <ul id="absentee-ul" style="padding-left: 20px; font-size: 14px; color: #2d3748;"></ul>
                     </div>
-                    <button class="btn btn-holiday" onclick="promptHoliday()" style="margin-top: 15px;">Change to Holiday</button>
                 </div>
             </div>
         </div>
@@ -285,6 +290,9 @@
             document.querySelectorAll('.sidebar .menu-item').forEach(m => m.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
             element.classList.add('active');
+            if(tabId === 'attendance') {
+                checkGlobalHoliday();
+            }
         }
 
         function fetchStudentData() {
@@ -425,47 +433,56 @@
             });
         }
 
+        function checkGlobalHoliday() {
+            db.ref(`attendance/1/${todayDateStr}`).once('value').then((snapshot) => {
+                const data = snapshot.val();
+                let isHoliday = false;
+                if(data) {
+                    Object.keys(data).forEach(stId => {
+                        if(data[stId] === "Holiday") isHoliday = true;
+                    });
+                }
+
+                if (isHoliday) {
+                    document.getElementById("attendance-holiday-container").style.display = "block";
+                    document.getElementById("attendance-selection-box").style.display = "none";
+                    document.getElementById("attendance-active-container").style.display = "none";
+                    document.getElementById("attendance-locked-container").style.display = "none";
+                } else {
+                    document.getElementById("attendance-holiday-container").style.display = "none";
+                    document.getElementById("attendance-selection-box").style.display = "block";
+                    checkTodayAttendanceStatus();
+                }
+            });
+        }
+
         function checkTodayAttendanceStatus() {
             const classNum = document.getElementById("att-class").value;
             if(!classNum) {
                 document.getElementById("attendance-active-container").style.display = "none";
                 document.getElementById("attendance-locked-container").style.display = "none";
-                document.getElementById("attendance-holiday-container").style.display = "none";
                 return;
             }
 
             db.ref(`attendance/${classNum}/${todayDateStr}`).once('value').then((snapshot) => {
                 const existingData = snapshot.val();
                 if (existingData) {
-                    let isHoliday = false;
-                    Object.keys(existingData).forEach(stId => {
-                        if(existingData[stId] === "Holiday") isHoliday = true;
+                    document.getElementById("attendance-active-container").style.display = "none";
+                    document.getElementById("attendance-locked-container").style.display = "block";
+                    
+                    const ul = document.getElementById("absentee-ul");
+                    ul.innerHTML = "";
+                    let absenteesFound = false;
+                    Object.keys(existingData).forEach(studentId => {
+                        if (existingData[studentId] === "Absent") {
+                            absenteesFound = true;
+                            let li = document.createElement("li");
+                            li.innerText = `Student ID: ${studentId}`;
+                            ul.appendChild(li);
+                        }
                     });
-
-                    if (isHoliday) {
-                        document.getElementById("attendance-active-container").style.display = "none";
-                        document.getElementById("attendance-locked-container").style.display = "none";
-                        document.getElementById("attendance-holiday-container").style.display = "block";
-                    } else {
-                        document.getElementById("attendance-holiday-container").style.display = "none";
-                        document.getElementById("attendance-active-container").style.display = "none";
-                        document.getElementById("attendance-locked-container").style.display = "block";
-                        
-                        const ul = document.getElementById("absentee-ul");
-                        ul.innerHTML = "";
-                        let absenteesFound = false;
-                        Object.keys(existingData).forEach(studentId => {
-                            if (existingData[studentId] === "Absent") {
-                                absenteesFound = true;
-                                let li = document.createElement("li");
-                                li.innerText = `Student ID: ${studentId}`;
-                                ul.appendChild(li);
-                            }
-                        });
-                        if(!absenteesFound) ul.innerHTML = `<li>No absentees today (All present!).</li>`;
-                    }
+                    if(!absenteesFound) ul.innerHTML = `<li>No absentees today (All present!).</li>`;
                 } else {
-                    document.getElementById("attendance-holiday-container").style.display = "none";
                     document.getElementById("attendance-locked-container").style.display = "none";
                     document.getElementById("attendance-active-container").style.display = "block";
                     
@@ -515,18 +532,25 @@
 
             db.ref(`attendance`).update(updates).then(() => {
                 alert("Holiday declared successfully for all school!");
-                checkTodayAttendanceStatus();
+                checkGlobalHoliday();
             });
         }
 
         function undoHoliday() {
-            const classNum = document.getElementById("att-class").value;
-            if(!classNum) return;
-            db.ref(`attendance/${classNum}/${todayDateStr}`).remove().then(() => {
-                alert("Holiday removed. You can now mark attendance.");
-                checkTodayAttendanceStatus();
+            let updates = {};
+            for(let c = 1; c <= 10; c++) {
+                updates[c] = null; // Removes today's attendance/holiday node for all classes
+            }
+            db.ref(`attendance`).update(updates).then(() => {
+                alert("Holiday removed. Attendance is now re-enabled.");
+                checkGlobalHoliday();
             });
         }
+
+        // Run check on page load if attendance tab is active
+        window.onload = function() {
+            checkGlobalHoliday();
+        };
     </script>
 </body>
 </html>
