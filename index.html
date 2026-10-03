@@ -77,8 +77,8 @@
                 <div class="card-body">
                     <form onsubmit="handleStudentLogin(event)">
                         <div class="form-group">
-                            <label for="student-user">User Name (e.g. 51 for Class 5 Roll 1)</label>
-                            <input type="text" id="student-user" placeholder="Enter username" required>
+                            <label for="student-user">User Name</label>
+                            <input type="text" id="student-user" placeholder="Enter ID (e.g. 51)" required>
                         </div>
                         <div class="form-group">
                             <label for="student-pass">Password</label>
@@ -127,9 +127,8 @@
             
             if (isValidStudent && password === "webcap") {
                 errorMsg.style.display = "none";
-                localStorage.setItem("currentUserRole", "student");
-                localStorage.setItem("currentUserId", userIdStr);
-                window.location.href = "dashboard.html";
+                sessionStorage.setItem("studentId", userIdStr);
+                window.location.href = "student/login.html";
             } else {
                 errorMsg.style.display = "block";
             }
@@ -143,8 +142,7 @@
 
             if (username === "teacher" && password === "webcap") {
                 errorMsg.style.display = "none";
-                localStorage.setItem("currentUserRole", "teacher");
-                window.location.href = "dashboard.html";
+                window.location.href = "teacher/login.html";
             } else {
                 errorMsg.style.display = "block";
             }
