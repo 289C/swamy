@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal - Swamy School</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f9; display: flex; flex-direction: column; min-height: 100vh; }
+        .header { background: #e65100; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 20px; }
+        .logout-btn { background: #d9534f; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .container { flex: 1; max-width: 650px; width: 100%; margin: 30px auto; padding: 0 15px; }
+        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .card h2 { color: #e65100; margin-bottom: 20px; font-size: 20px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+        .info-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee; font-size: 15px; }
+        .info-label { font-weight: 600; color: #555; }
+        .info-value { color: #222; text-align: right; }
+    </style>
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+    <div class="header">
+        <h1 id="portal-title">Student Dashboard</h1>
+        <button class="logout-btn" onclick="location.href='../index.html'">Logout</button>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>My Profile & Academic Record</h2>
+            <div class="info-row"><span class="info-label">Student ID:</span><span id="res-id" class="info-value">-</span></div>
+            <div class="info-row"><span class="info-label">Student Name:</span><span id="res-name" class="info-value">Loading...</span></div>
+            <div class="info-row"><span class="info-label">Attendance:</span><span id="res-attendance" class="info-value">Loading...</span></div>
+            <div class="info-row"><span class="info-label">Marks / Report:</span><span id="res-marks" class="info-value">Loading...</span></div>
+            <div class="info-row"><span class="info-label">Fee Status:</span><span id="res-fee" class="info-value">Loading...</span></div>
+            <div class="info-row" style="border-bottom:none;"><span class="info-label">Teacher Remarks:</span><span id="res-remarks" class="info-value">Loading...</span></div>
+        </div>
+    </div>
+
+    <script>
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBzLchy5M2fLne4c7Ghw1KNN8wVrlZdd8M",
+            authDomain: "friendsgame-872f5.firebaseapp.com",
+            databaseURL: "https://friendsgame-872f5-default-rtdb.firebaseio.com",
+            projectId: "friendsgame-872f5",
+            storageBucket: "friendsgame-872f5.firebasestorage.app",
+            messagingSenderId: "522534013233",
+            appId: "1:522534013233:web:f5faa6e6795023d0420810",
+            measurementId: "G-PW5H3G97QR"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const studentId = sessionStorage.getItem("studentId");
+        if (!studentId) {
+            window.location.href = "../index.html";
+        } else {
+            document.getElementById("res-id").innerText = studentId;
+            document.getElementById("portal-title").innerText = "Student Portal (ID: " + studentId + ")";
+
+            db.ref('students/' + studentId).once('value').then((snapshot) => {
+                const val = snapshot.val();
+                if (val) {
+                    document.getElementById("res-name").innerText = val.name || "Not updated yet";
+                    document.getElementById("res-attendance").innerText = val.attendance || "Not updated yet";
+                    document.getElementById("res-marks").innerText = val.marks || "Not updated yet";
+                    document.getElementById("res-fee").innerText = val.fee || "Not updated yet";
+                    document.getElementById("res-remarks").innerText = val.remarks || "None";
+                } else {
+                    document.getElementById("res-name").innerText = "No records found yet";
+                    document.getElementById("res-attendance").innerText = "-";
+                    document.getElementById("res-marks").innerText = "-";
+                    document.getElementById("res-fee").innerText = "-";
+                    document.getElementById("res-remarks").innerText = "-";
+                }
+            });
+        }
+    </script>
+</body>
+</html>
