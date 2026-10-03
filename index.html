@@ -301,10 +301,24 @@
             const errorMsg = document.getElementById('student-error');
 
             const userIdNum = parseInt(userIdStr, 10);
-            // Validates student IDs from 1 to 600 and password "webcap" without showing hints to users
-            const isValidIdRange = !isNaN(userIdNum) && userIdNum >= 1 && userIdNum <= 600;
             
-            if (isValidIdRange && password === "webcap") {
+            // Checks classes 1 to 10, with roll numbers 1 to 30 per class (e.g., Class 5 roll 1-30 evaluates to 51 through 530)
+            let isValidStudent = false;
+            if (!isNaN(userIdNum)) {
+                for (let c = 1; c <= 10; c++) {
+                    for (let r = 1; r <= 30; r++) {
+                        // Combines class number and roll number (e.g. Class 5 + Roll 10 -> "510" -> integer 510)
+                        let generatedId = parseInt(c.toString() + r.toString(), 10);
+                        if (userIdNum === generatedId) {
+                            isValidStudent = true;
+                            break;
+                        }
+                    }
+                    if (isValidStudent) break;
+                }
+            }
+            
+            if (isValidStudent && password === "webcap") {
                 errorMsg.style.display = "none";
                 alert("Student login successful! Redirecting...");
                 // window.location.href = "student-dashboard.html";
