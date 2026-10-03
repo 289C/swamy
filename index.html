@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swamy E.M High School - Portal Login</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .school-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .school-header h1 {
+            color: #1e3c72;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .school-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #777;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            color: #1e3c72;
+            border-bottom: 3px solid #1e3c72;
+            margin-bottom: -2px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            border-color: #1e3c72;
+            outline: none;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #1e3c72;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            background: #162c54;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .error-msg {
+            color: #d9534f;
+            font-size: 13px;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="school-header">
+            <h1>Swamy E.M High School</h1>
+            <p>Portal Login System</p>
+        </div>
+
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchTab('student')">Student</button>
+            <button class="tab-btn tab-btn-teacher" onclick="switchTab('teacher')">Teacher</button>
+        </div>
+
+        <!-- Student Login Form -->
+        <div id="student-form" class="form-section active">
+            <form onsubmit="handleStudentLogin(event)">
+                <div class="form-group">
+                    <label for="student-user">Student ID (001 to 600)</label>
+                    <input type="text" id="student-user" placeholder="e.g., 045" required>
+                </div>
+                <div class="form-group">
+                    <label for="student-pass">Password</label>
+                    <input type="password" id="student-pass" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="login-btn">Student Login</button>
+                <div id="student-error" class="error-msg">Invalid ID or password.</div>
+            </form>
+        </div>
+
+        <!-- Teacher Login Form -->
+        <div id="teacher-form" class="form-section">
+            <form onsubmit="handleTeacherLogin(event)">
+                <div class="form-group">
+                    <label for="teacher-user">Teacher Username</label>
+                    <input type="text" id="teacher-user" placeholder="Enter username" required>
+                </div>
+                <div class="form-group">
+                    <label for="teacher-pass">Password</label>
+                    <input type="password" id="teacher-pass" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="login-btn">Teacher Login</button>
+                <div id="teacher-error" class="error-msg">Invalid username or password.</div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(role) {
+            const studentForm = document.getElementById('student-form');
+            const teacherForm = document.getElementById('teacher-form');
+            const buttons = document.querySelectorAll('.tab-btn');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            if (role === 'student') {
+                studentForm.classList.add('active');
+                teacherForm.classList.remove('active');
+                buttons[0].classList.add('active');
+            } else {
+                teacherForm.classList.add('active');
+                studentForm.classList.remove('active');
+                buttons[1].classList.add('active');
+            }
+        }
+
+        function handleStudentLogin(event) {
+            event.preventDefault();
+            const userIdStr = document.getElementById('student-user').value.trim();
+            const password = document.getElementById('student-pass').value;
+            const errorMsg = document.getElementById('student-error');
+
+            // Convert string to integer to check range 1 to 600
+            const userIdNum = parseInt(userIdStr, 10);
+            const isValidIdRange = !isNaN(userIdNum) && userIdNum >= 1 && userIdNum <= 600;
+            
+            // Password verification ("webcap")
+            if (isValidIdRange && password === "webcap") {
+                errorMsg.style.display = "none";
+                alert("Student login successful! Redirecting...");
+                // window.location.href = "student-dashboard.html";
+            } else {
+                errorMsg.style.display = "block";
+            }
+        }
+
+        function handleTeacherLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('teacher-user').value.trim();
+            const password = document.getElementById('teacher-pass').value;
+            const errorMsg = document.getElementById('teacher-error');
+
+            // Sample hardcoded check for demonstration (Change username/password as needed)
+            if (username === "teacher" && password === "webcap") {
+                errorMsg.style.display = "none";
+                alert("Teacher login successful! Redirecting...");
+                // window.location.href = "teacher-dashboard.html";
+            } else {
+                errorMsg.style.display = "block";
+            }
+        }
+    </script>
+</body>
+</html>
