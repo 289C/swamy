@@ -7,26 +7,44 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; flex-direction: column; min-height: 100vh; }
+        
+        /* Unified Colorful Heading */
         .school-banner { background: linear-gradient(135deg, #1e3c72, #2a5298, #6a1b9a); color: #ffffff; padding: 25px 15px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); border-bottom: 4px solid #ff9800; }
         .school-banner h1 { font-size: 28px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); background: linear-gradient(90deg, #ffeb3b, #ff9800, #ffffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .school-banner p { color: #e0e0e0; font-size: 13px; margin: 4px 0; font-weight: 500; }
+
         .marquee-container { background-color: #d9534f; color: #ffffff; padding: 9px 10px; font-size: 13px; font-weight: 600; overflow: hidden; white-space: nowrap; box-shadow: inset 0 -2px 5px rgba(0,0,0,0.1); }
         .marquee-container marquee { width: 100%; }
-        .main-container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 40px 15px; }
-        .login-grid { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; max-width: 780px; width: 100%; }
+
+        .main-container { flex: 1; padding: 40px 15px; max-width: 1100px; width: 100%; margin: 0 auto; }
+        .login-grid { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; margin-bottom: 40px; }
+        
         .login-card { background: #ffffff; border-radius: 10px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); width: 100%; max-width: 340px; overflow: hidden; transition: transform 0.3s ease; }
         .login-card:hover { transform: translateY(-5px); }
         .card-header-teacher { background: linear-gradient(135deg, #6a1b9a, #8e24aa); }
         .card-header-student { background: linear-gradient(135deg, #e65100, #f57c00); }
         .card-header { color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: 700; }
         .card-body { padding: 25px; }
+        
         .form-group { margin-bottom: 18px; }
         .form-group label { display: block; margin-bottom: 6px; color: #333; font-size: 13px; font-weight: 600; }
         .form-group input { width: 100%; padding: 11px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        
         .login-btn-teacher { background: linear-gradient(135deg, #6a1b9a, #8e24aa); }
         .login-btn-student { background: linear-gradient(135deg, #e65100, #f57c00); }
         .login-btn { width: 100%; padding: 12px; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 5px; }
         .error-msg { color: #d9534f; font-size: 12px; margin-top: 10px; text-align: center; font-weight: 600; display: none; }
+
+        /* Events Dashboard Section */
+        .events-section { background: #ffffff; border-radius: 10px; padding: 25px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); margin-top: 20px; }
+        .events-section h2 { color: #1e3c72; font-size: 20px; border-bottom: 3px solid #1e3c72; padding-bottom: 8px; margin-bottom: 20px; text-transform: uppercase; }
+        .events-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .event-card { background: #fdfdfd; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .event-img { width: 100%; height: 160px; object-fit: cover; background: #e2e8f0; }
+        .event-body { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .event-title { font-size: 16px; font-weight: 700; color: #1e3c72; margin-bottom: 8px; }
+        .event-meta { font-size: 12px; color: #555; margin-bottom: 5px; }
+
         .location-section { background: #ffffff; padding: 25px; text-align: center; border-top: 1px solid #e0e0e0; }
         .location-btn { display: inline-block; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 12px 24px; border-radius: 30px; text-decoration: none; font-size: 14px; font-weight: 700; }
         .footer { background: #1e3c72; color: white; text-align: center; padding: 15px; font-size: 12px; }
@@ -90,6 +108,14 @@
                 </div>
             </div>
         </div>
+
+        <!-- Events Dashboard -->
+        <div class="events-section">
+            <h2>Upcoming School Events & Notices</h2>
+            <div id="events-grid-container" class="events-grid">
+                <p style="color: #666; font-style: italic;">Loading school events...</p>
+            </div>
+        </div>
     </div>
 
     <div class="location-section">
@@ -115,6 +141,44 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+
+        // Load Events on Page Load
+        db.ref('events').once('value').then((snapshot) => {
+            const eventsData = snapshot.val() || {};
+            const container = document.getElementById("events-grid-container");
+            container.innerHTML = "";
+
+            const keys = Object.keys(eventsData);
+            if (keys.length === 0) {
+                container.innerHTML = `<p style="color: #666; font-style: italic;">No upcoming events announced at this time.</p>`;
+                return;
+            }
+
+            keys.forEach(key => {
+                const ev = eventsData[key];
+                let card = document.createElement("div");
+                card.className = "event-card";
+
+                let imgHtml = ev.image ? `<img src="${ev.image}" class="event-img" alt="Event Image">` : "";
+                let dayHtml = ev.day ? `<div class="event-meta">📅 <strong>Day:</strong> ${ev.day}</div>` : "";
+                let addrHtml = ev.address ? `<div class="event-meta">📍 <strong>Location:</strong> ${ev.address}</div>` : "";
+                let descHtml = ev.desc ? `<p style="font-size: 13px; color: #444; margin-top: 8px;">${ev.desc}</p>` : "";
+
+                card.innerHTML = `
+                    ${imgHtml}
+                    <div class="event-body">
+                        <div>
+                            <div class="event-title">${ev.name}</div>
+                            <div class="event-meta">🕒 <strong>Date:</strong> ${ev.date}</div>
+                            ${dayHtml}
+                            ${addrHtml}
+                            ${descHtml}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        });
 
         function handleStudentLogin(event) {
             event.preventDefault();
