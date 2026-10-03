@@ -35,6 +35,7 @@
         .att-history-table th { background-color: #f5f5f5; }
         .badge-present { color: #28a745; font-weight: bold; }
         .badge-absent { color: #d9534f; font-weight: bold; }
+        .badge-holiday { color: #f0ad4e; font-weight: bold; }
 
         .footer { background: #1e3c72; color: white; text-align: center; padding: 10px; font-size: 11px; }
 
@@ -84,12 +85,15 @@
 
             <!-- ATTENDANCE -->
             <div id="section-attendance" class="content-card">
-                <h2>Day-by-Day Attendance Record</h2>
+                <h2>Day-by-Day Attendance Record & Percentage</h2>
+                <div style="padding: 12px; background: #eef2f7; border-radius: 4px; margin-bottom: 15px; font-size: 15px; font-weight: bold; color: #1e3c72;">
+                    Overall Attendance Percentage: <span id="lbl-percentage">Calculing...</span>
+                </div>
                 <table class="att-history-table">
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Status (First Period)</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody id="att-history-tbody">
@@ -139,17 +143,15 @@
             document.getElementById("lbl-id").innerText = studentId;
             document.getElementById("welcome-user").innerText = "Welcome, Student (ID: " + studentId + ")";
 
-            // Determine class number from student ID (e.g., ID "51" or "512" -> Class is first digit or first two digits depending on class 1-10)
-            // For roll formats like 51 to 530, class can be extracted:
             let classNum = "";
             if (studentId.length === 3) {
-                classNum = studentId.substring(0, 2); // Handles class 10 (e.g., 101 to 1030)
+                classNum = studentId.substring(0, 2);
                 if(parseInt(classNum) > 10) classNum = studentId.substring(0, 1);
             } else {
-                classNum = studentId.substring(0, 1); // Classes 1 to 9
+                classNum = studentId.substring(0, 1);
             }
 
-            // Fetch general profile details
+            // Fetch profile data
             db.ref('students/' + studentId).once('value').then((snapshot) => {
                 const val = snapshot.val() || {};
                 document.getElementById("lbl-name").innerText = val.name || "Not updated yet";
@@ -158,30 +160,49 @@
                 document.getElementById("lbl-remarks").innerText = val.remarks || "No remarks";
             });
 
-            // Fetch attendance history for this class
+            // Fetch attendance and compute live percentage
             db.ref('attendance/' + classNum).once('value').then((snapshot) => {
                 const datesData = snapshot.val() || {};
                 const tbody = document.getElementById("att-history-tbody");
                 tbody.innerHTML = "";
 
-                const dates = Object.keys(datesData).sort().reverse(); // Show newest dates first
+                const dates = Object.keys(datesData).sort().reverse();
                 if (dates.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="2">No attendance records found yet.</td></tr>`;
+                    document.getElementById("lbl-percentage").innerText = "N/A";
                     return;
                 }
+
+                let totalWorkingDays = 0;
+                let totalPresentDays = 0;
 
                 dates.forEach(date => {
                     const classAttendanceOnDate = datesData[date];
                     const status = classAttendanceOnDate[studentId] || "Not Marked";
                     
+                    if (status === "Present") {
+                        totalWorkingDays++;
+                        totalPresentDays++;
+                    } else if (status === "Absent") {
+                        totalWorkingDays++;
+                    }
+                    // Holidays are excluded from working days count
+
                     let tr = document.createElement("tr");
-                    let badgeClass = status === "Present" ? "badge-present" : (status === "Absent" ? "badge-absent" : "");
+                    let badgeClass = status === "Present" ? "badge-present" : (status === "Absent" ? "badge-absent" : "badge-holiday");
                     tr.innerHTML = `
                         <td>${date}</td>
                         <td><span class="${badgeClass}">${status}</span></td>
                     `;
                     tbody.appendChild(tr);
                 });
+
+                if (totalWorkingDays > 0) {
+                    let percentage = ((totalPresentDays / totalWorkingDays) * 100).toFixed(2);
+                    document.getElementById("lbl-percentage").innerText = percentage + "% (" + totalPresentDays + " / " + totalWorkingDays + " days)";
+                } else {
+                    document.getElementById("lbl-percentage").innerText = "100% (No working days counted yet)";
+                }
             });
         }
 
