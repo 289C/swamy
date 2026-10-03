@@ -174,34 +174,29 @@
             display: none;
         }
 
-        /* Map Section Styling */
-        .map-section {
+        /* Clickable Location Section */
+        .location-section {
             background: #ffffff;
             padding: 20px;
             text-align: center;
             border-top: 1px solid #ddd;
         }
 
-        .map-section h3 {
-            color: #1e3c72;
-            font-size: 16px;
-            margin-bottom: 10px;
+        .location-btn {
+            display: inline-block;
+            background-color: #1e3c72;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        .map-container {
-            width: 100%;
-            max-width: 800px;
-            height: 250px;
-            margin: 0 auto;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .map-container iframe {
-            width: 100%;
-            height: 100%;
-            border: 0;
+        .location-btn:hover {
+            background-color: #162c54;
         }
 
         /* Footer */
@@ -275,17 +270,11 @@
         </div>
     </div>
 
-    <!-- Google Map Location Section -->
-    <div class="map-section">
-        <h3>Our School Location</h3>
-        <div class="map-container">
-            <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3819.8519455322967!2d82.2384!3d16.9458!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a38283a00000001%3A0x0!2zVuKAmXMgQVBTUCwgQW5qYW5leWEgTmFnYXIsIEtha2luYWRh!5e0!3m2!1sen!2sin!4v1690000000000!5m2!1sen!2sin" 
-                allowfullscreen="" 
-                loading="lazy" 
-                referrerpolicy="no-referrer-when-downgrade">
-            </iframe>
-        </div>
+    <!-- Clickable Location Section -->
+    <div class="location-section">
+        <a href="https://maps.app.goo.gl/mRuErmZZTERj5PjK7" target="_blank" class="location-btn">
+            📍 Click Here to View School Location on Google Maps
+        </a>
     </div>
 
     <!-- Footer -->
@@ -302,12 +291,11 @@
 
             const userIdNum = parseInt(userIdStr, 10);
             
-            // Checks classes 1 to 10, with roll numbers 1 to 30 per class (e.g., Class 5 roll 1-30 evaluates to 51 through 530)
+            // Checks classes 1 to 10, with roll numbers 1 to 30 per class
             let isValidStudent = false;
             if (!isNaN(userIdNum)) {
                 for (let c = 1; c <= 10; c++) {
                     for (let r = 1; r <= 30; r++) {
-                        // Combines class number and roll number (e.g. Class 5 + Roll 10 -> "510" -> integer 510)
                         let generatedId = parseInt(c.toString() + r.toString(), 10);
                         if (userIdNum === generatedId) {
                             isValidStudent = true;
