@@ -53,7 +53,7 @@
         .absent-list-box { background: #fff5f5; border: 1px solid #feb2b2; padding: 15px; border-radius: 4px; margin-top: 15px; }
         .absent-list-box h3 { color: #c53030; font-size: 15px; margin-bottom: 8px; }
 
-        .holiday-banner { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 20px; border-radius: 4px; font-weight: bold; text-align: center; font-size: 16px; margin-top: 15px; }
+        .holiday-banner { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 20px; border-radius: 4px; font-weight: bold; text-align: center; font-size: 16px; margin-top: 10px; }
 
         .footer { background: #1e3c72; color: white; text-align: center; padding: 10px; font-size: 11px; }
 
@@ -88,7 +88,7 @@
             <a class="menu-item active" onclick="switchTab('editor', this)">STUDENT PROFILE</a>
             <a class="menu-item" onclick="switchTab('marks', this)">EXAM MARKS (FA/SA)</a>
             <a class="menu-item" onclick="switchTab('fee', this)">FEE MANAGEMENT</a>
-            <a class="menu-item" onclick="switchTab('attendance', this)" onclick="checkGlobalHoliday()">TODAY'S ATTENDANCE</a>
+            <a class="menu-item" onclick="switchTab('attendance', this)">TODAY'S ATTENDANCE</a>
         </div>
 
         <div class="content-area">
@@ -194,16 +194,16 @@
             <div id="tab-attendance" class="content-card">
                 <h2>First Period Attendance Manager (Today Only)</h2>
                 
-                <!-- Holiday Declare Button (Always on top before choosing class) -->
-                <button class="btn btn-holiday" onclick="promptHoliday()">Declare Holiday For Today (All School)</button>
+                <!-- Holiday Declare Button (Always on top) -->
+                <button id="btn-declare-holiday" class="btn btn-holiday" onclick="promptHoliday()">Declare Holiday For Today (All School)</button>
 
-                <!-- Holiday Banner View -->
+                <!-- Holiday Banner View (Blocked Screen) -->
                 <div id="attendance-holiday-container" style="display: none;">
                     <div class="holiday-banner">
                         🎉 TODAY IS DECLARED AS A HOLIDAY FOR ALL SCHOOL!<br>
                         <span style="font-size: 13px; font-weight: normal; color: #555;">Attendance cannot be opened or edited as a holiday has been declared for today.</span>
                     </div>
-                    <button class="btn" onclick="undoHoliday()" style="background:#337ab7; margin-top:15px;">Cancel Holiday & Re-enable Attendance</button>
+                    <button class="btn" onclick="undoHoliday()" style="background:#337ab7; margin-top:15px;">Remove Holiday</button>
                 </div>
 
                 <!-- Choose Class Section -->
@@ -434,21 +434,17 @@
         }
 
         function checkGlobalHoliday() {
-            db.ref(`attendance/1/${todayDateStr}`).once('value').then((snapshot) => {
-                const data = snapshot.val();
-                let isHoliday = false;
-                if(data) {
-                    Object.keys(data).forEach(stId => {
-                        if(data[stId] === "Holiday") isHoliday = true;
-                    });
-                }
+            db.ref(`schoolHolidays/${todayDateStr}`).once('value').then((snapshot) => {
+                const isHoliday = snapshot.val();
 
-                if (isHoliday) {
+                if (isHoliday === true) {
+                    document.getElementById("btn-declare-holiday").style.display = "none";
                     document.getElementById("attendance-holiday-container").style.display = "block";
                     document.getElementById("attendance-selection-box").style.display = "none";
                     document.getElementById("attendance-active-container").style.display = "none";
                     document.getElementById("attendance-locked-container").style.display = "none";
                 } else {
+                    document.getElementById("btn-declare-holiday").style.display = "block";
                     document.getElementById("attendance-holiday-container").style.display = "none";
                     document.getElementById("attendance-selection-box").style.display = "block";
                     checkTodayAttendanceStatus();
@@ -521,16 +517,20 @@
             let confirmHoliday = confirm("Are you sure you want to declare today as a Holiday for the entire school?");
             if (!confirmHoliday) return;
 
+            // 1. Set global school holiday flag
+            // 2. Set holiday record for all classes in attendance node so students see it
             let updates = {};
+            updates[`schoolHolidays/${todayDateStr}`] = true;
+
             for(let c = 1; c <= 10; c++) {
                 let classRecords = {};
                 for(let r = 1; r <= 30; r++) {
                     classRecords[c + r.toString()] = "Holiday";
                 }
-                updates[c] = classRecords;
+                updates[`attendance/${c}/${todayDateStr}`] = classRecords;
             }
 
-            db.ref(`attendance`).update(updates).then(() => {
+            db.ref().update(updates).then(() => {
                 alert("Holiday declared successfully for all school!");
                 checkGlobalHoliday();
             });
@@ -538,16 +538,18 @@
 
         function undoHoliday() {
             let updates = {};
+            updates[`schoolHolidays/${todayDateStr}`] = null;
+            
             for(let c = 1; c <= 10; c++) {
-                updates[c] = null; // Removes today's attendance/holiday node for all classes
+                updates[`attendance/${c}/${todayDateStr}`] = null;
             }
-            db.ref(`attendance`).update(updates).then(() => {
+
+            db.ref().update(updates).then(() => {
                 alert("Holiday removed. Attendance is now re-enabled.");
                 checkGlobalHoliday();
             });
         }
 
-        // Run check on page load if attendance tab is active
         window.onload = function() {
             checkGlobalHoliday();
         };
