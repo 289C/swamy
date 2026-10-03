@@ -9,64 +9,73 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            height: 100vh;
+            background-color: #f4f6f9;
+            color: #333;
+        }
+
+        /* Header Banner Style */
+        .school-banner {
+            background: #ffffff;
+            border-bottom: 4px solid #b71c1c;
+            text-align: center;
+            padding: 15px 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .school-banner h1 {
+            color: #b71c1c;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .school-banner p {
+            color: #555;
+            font-size: 13px;
+        }
+
+        /* Main Container for Login Boxes */
+        .portal-container {
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 40px 20px;
+            max-width: 1000px;
+            margin: 0 auto;
         }
 
-        .login-container {
+        /* Individual Card Box Style */
+        .login-card {
             background: #ffffff;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 400px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 280px;
+            overflow: hidden;
+            border: 1px solid #ddd;
         }
 
-        .school-header {
+        .card-header {
+            padding: 12px;
             text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .school-header h1 {
-            color: #1e3c72;
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-
-        .school-header p {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .tab-buttons {
-            display: flex;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #eee;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 10px;
-            background: none;
-            border: none;
+            color: white;
+            font-weight: bold;
             font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            color: #777;
-            transition: 0.3s;
         }
 
-        .tab-btn.active {
-            color: #1e3c72;
-            border-bottom: 3px solid #1e3c72;
-            margin-bottom: -2px;
+        /* Card Header Colors matching reference layout */
+        .teacher-header { background: #6a1b9a; }
+        .student-header { background: #ef6c00; }
+        .parent-header { background: #1565c0; }
+
+        .card-body {
+            padding: 20px;
         }
 
         .form-group {
@@ -75,139 +84,162 @@
 
         .form-group label {
             display: block;
+            font-size: 12px;
+            color: #666;
             margin-bottom: 5px;
-            color: #333;
-            font-size: 14px;
         }
 
         .form-group input {
             width: 100%;
-            padding: 10px 12px;
+            padding: 8px 10px;
             border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 14px;
+            border-radius: 4px;
+            font-size: 13px;
         }
 
         .form-group input:focus {
-            border-color: #1e3c72;
             outline: none;
+            border-color: #333;
         }
 
         .login-btn {
             width: 100%;
-            padding: 12px;
-            background: #1e3c72;
+            padding: 8px;
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
             cursor: pointer;
-            transition: background 0.3s;
-            margin-top: 10px;
+            text-align: center;
         }
 
-        .login-btn:hover {
-            background: #162c54;
-        }
+        .teacher-btn { background: #6a1b9a; }
+        .teacher-btn:hover { background: #4a148c; }
 
-        .form-section {
-            display: none;
-        }
+        .student-btn { background: #ef6c00; }
+        .student-btn:hover { background: #e65100; }
 
-        .form-section.active {
-            display: block;
-        }
+        .parent-btn { background: #1565c0; }
+        .parent-btn:hover { background: #0d47a1; }
 
         .error-msg {
             color: #d9534f;
-            font-size: 13px;
-            margin-top: 10px;
+            font-size: 11px;
+            margin-top: 8px;
             text-align: center;
             display: none;
+        }
+
+        /* Footer links */
+        .footer-links {
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+            color: #555;
+            border-top: 1px solid #ddd;
+            background: #ffffff;
+        }
+
+        .footer-links a {
+            color: #0277bd;
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
 
-    <div class="login-container">
-        <div class="school-header">
-            <h1>Swamy E.M High School</h1>
-            <p>Portal Login System</p>
+    <!-- School Banner Header -->
+    <div class="school-banner">
+        <h1>Swamy English Medium High School</h1>
+        <p>Anjaneya Nagar, Kakinada - 533005 | Portal Login System</p>
+    </div>
+
+    <!-- Login Cards Section -->
+    <div class="portal-container">
+        
+        <!-- Teacher Login Card -->
+        <div class="login-card">
+            <div class="card-header teacher-header">Teacher Login</div>
+            <div class="card-body">
+                <form onsubmit="handleTeacherLogin(event)">
+                    <div class="form-group">
+                        <label>User Name</label>
+                        <input type="text" id="teacher-user" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="teacher-pass" required>
+                    </div>
+                    <button type="submit" class="login-btn teacher-btn">LOGIN</button>
+                    <div id="teacher-error" class="error-msg">Invalid user or password.</div>
+                </form>
+            </div>
         </div>
 
-        <div class="tab-buttons">
-            <button class="tab-btn active" onclick="switchTab('student')">Student</button>
-            <button class="tab-btn tab-btn-teacher" onclick="switchTab('teacher')">Teacher</button>
+        <!-- Student Login Card -->
+        <div class="login-card">
+            <div class="card-header student-header">Student Login</div>
+            <div class="card-body">
+                <form onsubmit="handleStudentLogin(event)">
+                    <div class="form-group">
+                        <label>Student ID (001 to 600)</label>
+                        <input type="text" id="student-user" placeholder="e.g. 055" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="student-pass" required>
+                    </div>
+                    <button type="submit" class="login-btn student-btn">LOGIN</button>
+                    <div id="student-error" class="error-msg">Invalid ID (001-600) or password.</div>
+                </form>
+            </div>
         </div>
 
-        <!-- Student Login Form -->
-        <div id="student-form" class="form-section active">
-            <form onsubmit="handleStudentLogin(event)">
-                <div class="form-group">
-                    <label for="student-user">Student ID (001 to 600)</label>
-                    <input type="text" id="student-user" placeholder="e.g., 045" required>
-                </div>
-                <div class="form-group">
-                    <label for="student-pass">Password</label>
-                    <input type="password" id="student-pass" placeholder="Enter password" required>
-                </div>
-                <button type="submit" class="login-btn">Student Login</button>
-                <div id="student-error" class="error-msg">Invalid ID or password.</div>
-            </form>
+        <!-- Parent Login Card -->
+        <div class="login-card">
+            <div class="card-header parent-header">Parent Login</div>
+            <div class="card-body">
+                <form onsubmit="handleParentLogin(event)">
+                    <div class="form-group">
+                        <label>User Name</label>
+                        <input type="text" id="parent-user" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="parent-pass" required>
+                    </div>
+                    <button type="submit" class="login-btn parent-btn">LOGIN</button>
+                    <div id="parent-error" class="error-msg">Invalid user or password.</div>
+                </form>
+            </div>
         </div>
 
-        <!-- Teacher Login Form -->
-        <div id="teacher-form" class="form-section">
-            <form onsubmit="handleTeacherLogin(event)">
-                <div class="form-group">
-                    <label for="teacher-user">Teacher Username</label>
-                    <input type="text" id="teacher-user" placeholder="Enter username" required>
-                </div>
-                <div class="form-group">
-                    <label for="teacher-pass">Password</label>
-                    <input type="password" id="teacher-pass" placeholder="Enter password" required>
-                </div>
-                <button type="submit" class="login-btn">Teacher Login</button>
-                <div id="teacher-error" class="error-msg">Invalid username or password.</div>
-            </form>
-        </div>
+    </div>
+
+    <!-- Footer Area -->
+    <div class="footer-links">
+        <p>Click <a href="#" onclick="alert('Redirecting to fee payment portal...'); return false;">here</a> for online fee payment without login</p>
+        <p style="margin-top: 5px;">Click <a href="#" onclick="alert('Terms & Conditions apply.'); return false;">here</a> for Terms & Conditions</p>
     </div>
 
     <script>
-        function switchTab(role) {
-            const studentForm = document.getElementById('student-form');
-            const teacherForm = document.getElementById('teacher-form');
-            const buttons = document.querySelectorAll('.tab-btn');
-
-            buttons.forEach(btn => btn.classList.remove('active'));
-
-            if (role === 'student') {
-                studentForm.classList.add('active');
-                teacherForm.classList.remove('active');
-                buttons[0].classList.add('active');
-            } else {
-                teacherForm.classList.add('active');
-                studentForm.classList.remove('active');
-                buttons[1].classList.add('active');
-            }
-        }
-
         function handleStudentLogin(event) {
             event.preventDefault();
             const userIdStr = document.getElementById('student-user').value.trim();
             const password = document.getElementById('student-pass').value;
             const errorMsg = document.getElementById('student-error');
 
-            // Convert string to integer to check range 1 to 600
             const userIdNum = parseInt(userIdStr, 10);
-            const isValidIdRange = !isNaN(userIdNum) && userIdNum >= 1 && userIdNum <= 600;
-            
-            // Password verification ("webcap")
-            if (isValidIdRange && password === "webcap") {
+            const isValidRange = !isNaN(userIdNum) && userIdNum >= 1 && userIdNum <= 600;
+
+            if (isValidRange && password === "webcap") {
                 errorMsg.style.display = "none";
-                alert("Student login successful! Redirecting...");
-                // window.location.href = "student-dashboard.html";
+                alert("Student Login Successful!");
             } else {
                 errorMsg.style.display = "block";
             }
@@ -215,15 +247,27 @@
 
         function handleTeacherLogin(event) {
             event.preventDefault();
-            const username = document.getElementById('teacher-user').value.trim();
+            const user = document.getElementById('teacher-user').value.trim();
             const password = document.getElementById('teacher-pass').value;
             const errorMsg = document.getElementById('teacher-error');
 
-            // Sample hardcoded check for demonstration (Change username/password as needed)
-            if (username === "teacher" && password === "webcap") {
+            if (user === "teacher" && password === "webcap") {
                 errorMsg.style.display = "none";
-                alert("Teacher login successful! Redirecting...");
-                // window.location.href = "teacher-dashboard.html";
+                alert("Teacher Login Successful!");
+            } else {
+                errorMsg.style.display = "block";
+            }
+        }
+
+        function handleParentLogin(event) {
+            event.preventDefault();
+            const user = document.getElementById('parent-user').value.trim();
+            const password = document.getElementById('parent-pass').value;
+            const errorMsg = document.getElementById('parent-error');
+
+            if (user === "parent" && password === "webcap") {
+                errorMsg.style.display = "none";
+                alert("Parent Login Successful!");
             } else {
                 errorMsg.style.display = "block";
             }
