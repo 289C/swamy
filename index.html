@@ -8,6 +8,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; flex-direction: column; min-height: 100vh; }
         
+        /* Unified Colorful Heading */
         .school-banner { background: linear-gradient(135deg, #1e3c72, #2a5298, #6a1b9a); color: #ffffff; padding: 25px 15px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); border-bottom: 4px solid #ff9800; }
         .school-banner h1 { font-size: 28px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); background: linear-gradient(90deg, #ffeb3b, #ff9800, #ffffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .school-banner p { color: #e0e0e0; font-size: 13px; margin: 4px 0; font-weight: 500; }
@@ -34,15 +35,9 @@
         .login-btn { width: 100%; padding: 12px; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 5px; }
         .error-msg { color: #d9534f; font-size: 12px; margin-top: 10px; text-align: center; font-weight: 600; display: none; }
 
-        /* Notice Board & Events Dashboard Sections */
-        .dashboard-section { background: #ffffff; border-radius: 10px; padding: 25px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); margin-bottom: 25px; }
-        .dashboard-section h2 { color: #1e3c72; font-size: 20px; border-bottom: 3px solid #1e3c72; padding-bottom: 8px; margin-bottom: 20px; text-transform: uppercase; }
-        
-        .notice-item { background: #fff5f5; border-left: 4px solid #d9534f; padding: 12px 15px; margin-bottom: 12px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
-        .notice-title { font-size: 15px; font-weight: bold; color: #c53030; margin-bottom: 4px; }
-        .notice-details { font-size: 13px; color: #4a5568; }
-        .notice-date { font-size: 11px; color: #718096; margin-top: 4px; text-align: right; }
-
+        /* Events Dashboard Section */
+        .events-section { background: #ffffff; border-radius: 10px; padding: 25px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); margin-top: 20px; }
+        .events-section h2 { color: #1e3c72; font-size: 20px; border-bottom: 3px solid #1e3c72; padding-bottom: 8px; margin-bottom: 20px; text-transform: uppercase; }
         .events-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
         .event-card { background: #fdfdfd; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         .event-img { width: 100%; height: 160px; object-fit: cover; background: #e2e8f0; }
@@ -55,6 +50,7 @@
         .footer { background: #1e3c72; color: white; text-align: center; padding: 15px; font-size: 12px; }
     </style>
 
+    <!-- Firebase SDK Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
@@ -113,16 +109,8 @@
             </div>
         </div>
 
-        <!-- Digital Notice Board Section -->
-        <div class="dashboard-section">
-            <h2>Digital Notice Board & Circulars</h2>
-            <div id="main-notices-container">
-                <p style="color: #666; font-style: italic;">Loading notices...</p>
-            </div>
-        </div>
-
         <!-- Events Dashboard -->
-        <div class="dashboard-section">
+        <div class="events-section">
             <h2>Upcoming School Events & Notices</h2>
             <div id="events-grid-container" class="events-grid">
                 <p style="color: #666; font-style: italic;">Loading school events...</p>
@@ -153,34 +141,6 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
-        // Load Digital Notices on Main Page
-        db.ref('schoolNotices').once('value').then((snapshot) => {
-            const data = snapshot.val() || {};
-            const container = document.getElementById("main-notices-container");
-            container.innerHTML = "";
-
-            const keys = Object.keys(data).reverse();
-            let count = 0;
-            keys.forEach(key => {
-                const item = data[key];
-                if (item.type === "Notice") {
-                    count++;
-                    let div = document.createElement("div");
-                    div.className = "notice-item";
-                    div.innerHTML = `
-                        <div class="notice-title">📢 ${item.title}</div>
-                        <div class="notice-details">${item.details || ""}</div>
-                        <div class="notice-date">Effective: ${item.date}</div>
-                    `;
-                    container.appendChild(div);
-                }
-            });
-
-            if (count === 0) {
-                container.innerHTML = `<p style="color: #666; font-style: italic;">No active circular notices at this time.</p>`;
-            }
-        });
 
         // Load Events on Page Load
         db.ref('events').once('value').then((snapshot) => {
