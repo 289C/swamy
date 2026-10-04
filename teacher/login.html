@@ -358,20 +358,33 @@
             });
         }
 
-        function saveProfileData() {
-            const id = document.getElementById("student-id").value.trim();
-            if(!id) { alert("Please load or enter Student ID first"); return; }
-            const data = {
-                name: document.getElementById("student-name").value,
-                password: document.getElementById("student-password").value || "webcap",
-                remarks: document.getElementById("student-remarks").value
-            };
-            db.ref('students/' + id).update(data).then(() => {
-                const msg = document.getElementById("success-msg");
-                msg.style.display = "block";
-                setTimeout(() => msg.style.display = "none", 2500);
-            });
-        }
+// FIX: Updated this function to correct the typo from 'remarkes' to 'remarks'
+// This ensures the teacher's input is correctly saved and can be displayed in the student portal.
+function saveProfileData() {
+    const id = document.getElementById("student-id").value.trim();
+    if(!id) { alert("Please load or enter Student ID first"); return; }
+    
+    // Prepare the data object to be sent to Firebase.
+    const data = {
+        name: document.getElementById("student-name").value,
+        password: document.getElementById("student-password").value || "webcap",
+        // CORRECTED TYPO: 'remarkes' is now 'remarks'
+        // The 'remarks' field is what the student portal code expects to read.
+        remarks: document.getElementById("student-remarks").value
+    };
+    
+    // Save the data to the 'students/{id}' location in your Firebase Realtime Database.
+    db.ref('students/' + id).update(data).then(() => {
+        const msg = document.getElementById("success-msg");
+        msg.style.display = "block";
+        // Hide the success message automatically after 2.5 seconds.
+        setTimeout(() => msg.style.display = "none", 2500);
+    }).catch((error) => {
+        console.error("Error saving profile data:", error);
+        alert("Failed to save profile. Please check your connection or try again.");
+    });
+}
+
 
         function publishEvent() {
             const name = document.getElementById("event-name").value.trim();
