@@ -8,7 +8,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f6f9; display: flex; flex-direction: column; min-height: 100vh; }
 
-        /* Unified Colorful Heading */
         .school-banner { background: linear-gradient(135deg, #1e3c72, #2a5298, #6a1b9a); color: #ffffff; padding: 25px 15px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); border-bottom: 4px solid #ff9800; }
         .school-banner h1 { font-size: 28px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); background: linear-gradient(90deg, #ffeb3b, #ff9800, #ffffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .school-banner p { color: #e0e0e0; font-size: 13px; margin: 4px 0; font-weight: 500; }
@@ -64,7 +63,6 @@
         }
     </style>
 
-    <!-- Firebase SDK Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
@@ -88,6 +86,7 @@
             <a class="menu-item" onclick="switchTab('marks', this)">EXAM MARKS (FA/SA)</a>
             <a class="menu-item" onclick="switchTab('fee', this)">FEE MANAGEMENT</a>
             <a class="menu-item" onclick="switchTab('attendance', this)">TODAY'S ATTENDANCE</a>
+            <a class="menu-item" onclick="switchTab('notices', this)">NOTICE BOARD & HW</a>
             <a class="menu-item" onclick="switchTab('events', this)">MANAGE EVENTS</a>
             <a class="menu-item" onclick="switchTab('password', this)">CHANGE PASSWORD</a>
         </div>
@@ -256,7 +255,53 @@
                 </div>
             </div>
 
-            <!-- TAB 5: Manage Events -->
+            <!-- TAB 5: Notice Board & Homework Manager -->
+            <div id="tab-notices" class="content-card">
+                <h2>Publish Notice Board & Homework</h2>
+                <div class="form-group">
+                    <label for="hn-type">Select Type</label>
+                    <select id="hn-type">
+                        <option value="Notice">Urgent Circular / Notice (Displays on Main Page)</option>
+                        <option value="Homework">Homework / Assignment</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="hn-class">Target Class</label>
+                    <select id="hn-class">
+                        <option value="All">All Classes (School-wide)</option>
+                        <option value="1">Class 1</option>
+                        <option value="2">Class 2</option>
+                        <option value="3">Class 3</option>
+                        <option value="4">Class 4</option>
+                        <option value="5">Class 5</option>
+                        <option value="6">Class 6</option>
+                        <option value="7">Class 7</option>
+                        <option value="8">Class 8</option>
+                        <option value="9">Class 9</option>
+                        <option value="10">Class 10</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="hn-title">Title / Subject</label>
+                    <input type="text" id="hn-title" placeholder="e.g. Exam Schedule / Maths HW">
+                </div>
+                <div class="form-group">
+                    <label for="hn-details">Details / Instructions</label>
+                    <textarea id="hn-details" rows="3" placeholder="Write full description here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="hn-date">Due Date / Effective Date</label>
+                    <input type="text" id="hn-date" placeholder="e.g. Oct 15, 2026">
+                </div>
+                <button class="btn" onclick="publishHomeworkNotice()">Publish Notice / Homework</button>
+                <div id="hn-success-msg" class="success-msg">Successfully published!</div>
+
+                <hr style="margin: 25px 0; border: 0; border-top: 1px solid #ddd;">
+                <h3 style="font-size:15px; margin-bottom:10px; color:#6a1b9a;">Existing Published Notices & Homework</h3>
+                <div id="admin-notices-list">Loading...</div>
+            </div>
+
+            <!-- TAB 6: Manage Events -->
             <div id="tab-events" class="content-card">
                 <h2>Publish School Events</h2>
                 <div class="form-group">
@@ -276,8 +321,8 @@
                     <input type="text" id="event-address" placeholder="e.g. School Main Ground">
                 </div>
                 <div class="form-group">
-                    <label for="event-image">Image URL (Optional)</label>
-                    <input type="text" id="event-image" placeholder="Paste image link here...">
+                    <label for="event-image-file">Upload Image from Phone Gallery (Optional)</label>
+                    <input type="file" id="event-image-file" accept="image/*">
                 </div>
                 <div class="form-group">
                     <label for="event-desc">Additional Details (Optional)</label>
@@ -291,7 +336,7 @@
                 <div id="admin-events-list">Loading events...</div>
             </div>
 
-            <!-- TAB 6: Change Password -->
+            <!-- TAB 7: Change Password -->
             <div id="tab-password" class="content-card">
                 <h2>Change Teacher Login Password</h2>
                 <div class="form-group">
@@ -336,12 +381,9 @@
             document.querySelectorAll('.sidebar .menu-item').forEach(m => m.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
             element.classList.add('active');
-            if(tabId === 'attendance') {
-                checkGlobalHoliday();
-            }
-            if(tabId === 'events') {
-                loadAdminEventsList();
-            }
+            if(tabId === 'attendance') checkGlobalHoliday();
+            if(tabId === 'events') loadAdminEventsList();
+            if(tabId === 'notices') loadAdminNoticesList();
         }
 
         function fetchStudentData() {
@@ -370,20 +412,77 @@
             });
         }
 
+        function publishHomeworkNotice() {
+            const type = document.getElementById("hn-type").value;
+            const targetClass = document.getElementById("hn-class").value;
+            const title = document.getElementById("hn-title").value.trim();
+            const details = document.getElementById("hn-details").value.trim();
+            const date = document.getElementById("hn-date").value.trim();
+
+            if(!title || !date) { alert("Please enter at least a Title and Date."); return; }
+
+            const record = { type, targetClass, title, details, date, timestamp: Date.now() };
+
+            db.ref('schoolNotices').push(record).then(() => {
+                const msg = document.getElementById("hn-success-msg");
+                msg.style.display = "block";
+                document.getElementById("hn-title").value = "";
+                document.getElementById("hn-details").value = "";
+                document.getElementById("hn-date").value = "";
+                loadAdminNoticesList();
+                setTimeout(() => msg.style.display = "none", 2500);
+            });
+        }
+
+        function loadAdminNoticesList() {
+            db.ref('schoolNotices').once('value').then((snapshot) => {
+                const data = snapshot.val() || {};
+                const listDiv = document.getElementById("admin-notices-list");
+                listDiv.innerHTML = "";
+                const keys = Object.keys(data).reverse();
+                if(keys.length === 0) { listDiv.innerHTML = `<p style="color:#666; font-size:13px;">No notices published yet.</p>`; return; }
+                keys.forEach(key => {
+                    const item = data[key];
+                    let div = document.createElement("div");
+                    div.className = "event-admin-item";
+                    div.innerHTML = `
+                        <span><strong>[${item.type}]</strong> ${item.title} (${item.date})</span>
+                        <button class="btn" style="width: auto; padding: 4px 10px; background: #d9534f; margin-top:0;" onclick="deleteNotice('${key}')">Delete</button>
+                    `;
+                    listDiv.appendChild(div);
+                });
+            });
+        }
+
+        function deleteNotice(key) {
+            if(confirm("Delete this notice?")) {
+                db.ref('schoolNotices/' + key).remove().then(() => loadAdminNoticesList());
+            }
+        }
+
         function publishEvent() {
             const name = document.getElementById("event-name").value.trim();
             const date = document.getElementById("event-date").value.trim();
             if(!name || !date) { alert("Event Name and Date are required!"); return; }
 
+            const fileInput = document.getElementById("event-image-file");
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) { saveEventToFirebase(name, date, e.target.result); };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                saveEventToFirebase(name, date, "");
+            }
+        }
+
+        function saveEventToFirebase(name, date, imageBase64) {
             const eventData = {
-                name: name,
-                date: date,
+                name, date,
                 day: document.getElementById("event-day").value.trim(),
                 address: document.getElementById("event-address").value.trim(),
-                image: document.getElementById("event-image").value.trim(),
+                image: imageBase64,
                 desc: document.getElementById("event-desc").value.trim()
             };
-
             db.ref('events').push(eventData).then(() => {
                 const msg = document.getElementById("event-success-msg");
                 msg.style.display = "block";
@@ -391,7 +490,7 @@
                 document.getElementById("event-date").value = "";
                 document.getElementById("event-day").value = "";
                 document.getElementById("event-address").value = "";
-                document.getElementById("event-image").value = "";
+                document.getElementById("event-image-file").value = "";
                 document.getElementById("event-desc").value = "";
                 loadAdminEventsList();
                 setTimeout(() => msg.style.display = "none", 2500);
@@ -403,13 +502,8 @@
                 const data = snapshot.val() || {};
                 const listDiv = document.getElementById("admin-events-list");
                 listDiv.innerHTML = "";
-
                 const keys = Object.keys(data);
-                if(keys.length === 0) {
-                    listDiv.innerHTML = `<p style="color:#666; font-size:13px;">No events published yet.</p>`;
-                    return;
-                }
-
+                if(keys.length === 0) { listDiv.innerHTML = `<p style="color:#666; font-size:13px;">No events published yet.</p>`; return; }
                 keys.forEach(key => {
                     const ev = data[key];
                     let div = document.createElement("div");
@@ -424,17 +518,14 @@
         }
 
         function deleteEvent(key) {
-            if(confirm("Are you sure you want to delete this event?")) {
-                db.ref('events/' + key).remove().then(() => {
-                    loadAdminEventsList();
-                });
+            if(confirm("Delete this event?")) {
+                db.ref('events/' + key).remove().then(() => loadAdminEventsList());
             }
         }
 
         function saveTeacherPassword() {
             const newPass = document.getElementById("new-teacher-password").value.trim();
             if(!newPass) { alert("Please enter a new password"); return; }
-
             db.ref('teachers/teacher/password').set(newPass).then(() => {
                 const msg = document.getElementById("password-success-msg");
                 msg.style.display = "block";
@@ -454,12 +545,7 @@
 
         function populateExamInputs() {
             const examType = document.getElementById("exam-select").value;
-            if(examType.startsWith('sa')) {
-                document.getElementById("marks-label-hint").innerText = "Subject-Wise Marks (SA Exam - Out of 100)";
-            } else {
-                document.getElementById("marks-label-hint").innerText = "Subject-Wise Marks (FA Exam - Out of 35)";
-            }
-
+            document.getElementById("marks-label-hint").innerText = examType.startsWith('sa') ? "Subject-Wise Marks (SA Exam - Out of 100)" : "Subject-Wise Marks (FA Exam - Out of 35)";
             const examData = (allStudentMarksCache && allStudentMarksCache[examType]) || {};
             document.getElementById("ex-telugu").value = examData.telugu || "";
             document.getElementById("ex-english").value = examData.english || "";
@@ -473,7 +559,6 @@
             const id = document.getElementById("marks-student-id").value.trim();
             const examType = document.getElementById("exam-select").value;
             if(!id) { alert("Please enter Student ID"); return; }
-
             const marksData = {
                 telugu: document.getElementById("ex-telugu").value,
                 english: document.getElementById("ex-english").value,
@@ -482,7 +567,6 @@
                 science: document.getElementById("ex-science").value,
                 social: document.getElementById("ex-social").value
             };
-
             db.ref(`exams/${id}/${examType}`).set(marksData).then(() => {
                 if(!allStudentMarksCache) allStudentMarksCache = {};
                 allStudentMarksCache[examType] = marksData;
@@ -502,7 +586,6 @@
                 document.getElementById("t-rem-fee").innerText = "₹20,000";
                 return;
             }
-
             db.ref('students/' + id).once('value').then((snapshot) => {
                 const val = snapshot.val() || {};
                 document.getElementById("fee-student-name").innerText = val.name || "Unnamed Student";
@@ -513,9 +596,7 @@
                 db.ref('feeTransactions/' + id).once('value').then((snapTrans) => {
                     const transData = snapTrans.val() || {};
                     let totalPaid = 0;
-                    Object.keys(transData).forEach(k => {
-                        totalPaid += parseFloat(transData[k].amount || 0);
-                    });
+                    Object.keys(transData).forEach(k => { totalPaid += parseFloat(transData[k].amount || 0); });
                     let remaining = totalFee - totalPaid;
                     document.getElementById("t-paid-fee").innerText = "₹" + totalPaid.toLocaleString();
                     document.getElementById("t-rem-fee").innerText = "₹" + remaining.toLocaleString();
@@ -527,7 +608,6 @@
             const id = document.getElementById("fee-student-id").value.trim();
             const totalFee = document.getElementById("total-fee-input").value.trim();
             if(!id) { alert("Please enter Student ID"); return; }
-
             db.ref('students/' + id).update({ totalFee: totalFee }).then(() => {
                 const msg = document.getElementById("total-fee-success");
                 msg.style.display = "block";
@@ -540,14 +620,7 @@
             const id = document.getElementById("fee-student-id").value.trim();
             const amount = document.getElementById("fee-amount").value.trim();
             if(!id || !amount) { alert("Enter Student ID and Amount"); return; }
-
-            const paymentRecord = {
-                amount: amount,
-                date: todayDateStr,
-                day: todayDayName,
-                timestamp: Date.now()
-            };
-
+            const paymentRecord = { amount, date: todayDateStr, day: todayDayName, timestamp: Date.now() };
             db.ref(`feeTransactions/${id}`).push(paymentRecord).then(() => {
                 const msg = document.getElementById("fee-success-msg");
                 msg.style.display = "block";
@@ -559,9 +632,7 @@
 
         function checkGlobalHoliday() {
             db.ref(`schoolHolidays/${todayDateStr}`).once('value').then((snapshot) => {
-                const isHoliday = snapshot.val();
-
-                if (isHoliday === true) {
+                if (snapshot.val() === true) {
                     document.getElementById("btn-declare-holiday").style.display = "none";
                     document.getElementById("attendance-holiday-container").style.display = "block";
                     document.getElementById("attendance-selection-box").style.display = "none";
@@ -583,13 +654,11 @@
                 document.getElementById("attendance-locked-container").style.display = "none";
                 return;
             }
-
             db.ref(`attendance/${classNum}/${todayDateStr}`).once('value').then((snapshot) => {
                 const existingData = snapshot.val();
                 if (existingData) {
                     document.getElementById("attendance-active-container").style.display = "none";
                     document.getElementById("attendance-locked-container").style.display = "block";
-                    
                     const ul = document.getElementById("absentee-ul");
                     ul.innerHTML = "";
                     let absenteesFound = false;
@@ -605,7 +674,6 @@
                 } else {
                     document.getElementById("attendance-locked-container").style.display = "none";
                     document.getElementById("attendance-active-container").style.display = "block";
-                    
                     const tbody = document.getElementById("att-tbody");
                     tbody.innerHTML = "";
                     for(let r = 1; r <= 30; r++) {
@@ -638,20 +706,14 @@
         }
 
         function promptHoliday() {
-            let confirmHoliday = confirm("Are you sure you want to declare today as a Holiday for the entire school?");
-            if (!confirmHoliday) return;
-
+            if (!confirm("Are you sure you want to declare today as a Holiday for the entire school?")) return;
             let updates = {};
             updates[`schoolHolidays/${todayDateStr}`] = true;
-
             for(let c = 1; c <= 10; c++) {
                 let classRecords = {};
-                for(let r = 1; r <= 30; r++) {
-                    classRecords[c + r.toString()] = "Holiday";
-                }
+                for(let r = 1; r <= 30; r++) { classRecords[c + r.toString()] = "Holiday"; }
                 updates[`attendance/${c}/${todayDateStr}`] = classRecords;
             }
-
             db.ref().update(updates).then(() => {
                 alert("Holiday declared successfully for all school!");
                 checkGlobalHoliday();
@@ -661,20 +723,14 @@
         function undoHoliday() {
             let updates = {};
             updates[`schoolHolidays/${todayDateStr}`] = null;
-            
-            for(let c = 1; c <= 10; c++) {
-                updates[`attendance/${c}/${todayDateStr}`] = null;
-            }
-
+            for(let c = 1; c <= 10; c++) { updates[`attendance/${c}/${todayDateStr}`] = null; }
             db.ref().update(updates).then(() => {
                 alert("Holiday removed. Attendance is now re-enabled.");
                 checkGlobalHoliday();
             });
         }
 
-        window.onload = function() {
-            checkGlobalHoliday();
-        };
+        window.onload = function() { checkGlobalHoliday(); };
     </script>
 </body>
 </html>
