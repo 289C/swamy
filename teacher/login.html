@@ -660,12 +660,64 @@ function saveProfileData() {
             });
         }
 
+        function checkTodayAttendanceStatus() {
+            const classNum = document.getElementById("att-class").value;
+            if(!classNum) {
+                document.getElementById("attendance-active-container").style.display = "none";
+                document.getElementById("attendance-locked-container").style.display = "none";
+                return;
+            }
+
+            db.ref(`attendance/${classNum}/${todayDateStr}`).once('value').then((snapshot) => {
+                const existingData = snapshot.val();
+                if (existingData) {
+                    document.getElementById("attendance-active-container").style.display = "none";
+                    document.getElementById("attendance-locked-container").style.display = "block";
+                    
+                    const ul = document.getElementById("absentee-ul");
+                    ul.innerHTML = "";
+                    let absenteesFound = false;
+                    Object.keys(existingData).forEach(studentId => {
+                        if (existingData[studentId] === "Absent") {
+                            absenteesFound = true;
+                            let li = document.createElement("li");
+                            li.innerText = `Student ID: ${studentId}`;
+                            ul.appendChild(li);
+                        }
+                    });
+                    if(!absenteesFound) ul.innerHTML = `<li>No absentees today (All present!).</li>`;
+                } else {
+                    document.getElementById("attendance-locked-container").style.display = "none";
+                    document.getElementById("attendance-active-container").style.display = "block";
+                    
+                    const tbody = document.getElementById("att-tbody");
+                    tbody.innerHTML = "";
+                    
+                    // Standardizing roll generation: Class 10 uses 1001, 1002, etc., others use standard concatenation
+                    for(let r = 1; r <= 30; r++) {
+                        let studentId = (classNum === "10") ? "10" + (r < 10 ? "0" + r : r) : classNum + r;
+                        let tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td><strong>ID: ${studentId}</strong> (Roll ${r})</td>
+                            <td>
+                                <div class="radio-group">
+                                    <label><input type="radio" name="att-${studentId}" value="Present" checked> Present</label>
+                                    <label><input type="radio" name="att-${studentId}" value="Absent"> Absent</label>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
+                }
+            });
+        }
+
         function submitAttendance() {
             const classNum = document.getElementById("att-class").value;
             if(!classNum) return;
             let attendanceRecords = {};
             for(let r = 1; r <= 30; r++) {
-                let studentId = classNum + r;
+                let studentId = (classNum === "10") ? "10" + (r < 10 ? "0" + r : r) : classNum + r;
                 attendanceRecords[studentId] = document.querySelector(`input[name="att-${studentId}"]:checked`).value;
             }
             db.ref(`attendance/${classNum}/${todayDateStr}`).set(attendanceRecords).then(() => checkTodayAttendanceStatus());
@@ -681,7 +733,8 @@ function saveProfileData() {
             for(let c = 1; c <= 10; c++) {
                 let classRecords = {};
                 for(let r = 1; r <= 30; r++) {
-                    classRecords[c + r.toString()] = "Holiday";
+                    let sId = (c === 10) ? "10" + (r < 10 ? "0" + r : r) : c + r.toString();
+                    classRecords[sId] = "Holiday";
                 }
                 updates[`attendance/${c}/${todayDateStr}`] = classRecords;
             }
@@ -691,24 +744,6 @@ function saveProfileData() {
                 checkGlobalHoliday();
             });
         }
-
-        function undoHoliday() {
-            let updates = {};
-            updates[`schoolHolidays/${todayDateStr}`] = null;
-            
-            for(let c = 1; c <= 10; c++) {
-                updates[`attendance/${c}/${todayDateStr}`] = null;
-            }
-
-            db.ref().update(updates).then(() => {
-                alert("Holiday removed. Attendance is now re-enabled.");
-                checkGlobalHoliday();
-            });
-        }
-
-        window.onload = function() {
-            checkGlobalHoliday();
-        };
     </script>
 </body>
 </html>
