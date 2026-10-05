@@ -749,6 +749,82 @@ function saveProfileData() {
                 checkGlobalHoliday();
             });
         }
+           function downloadAllClassesAbsenteesExcel() {
+            // Confirmation or loading alert since it checks multiple classes
+            alert("Compiling absentees for all classes. Please wait a moment...");
+
+            let allPromises = [];
+            let masterAbsenteesData = [];
+
+            // Loop through Class 1 to Class 10
+            for (let c = 1; c <= 10; c++) {
+                let promise = db.ref(`attendance/${c}/${todayDateStr}`).once('value').then(snapshot => {
+                    let classData = snapshot.val();
+                    if (classData) {
+                        let studentIds = Object.keys(classData);
+                        
+                        // For each student in this class, check if they are Absent
+                        studentIds.forEach(studentId => {
+                            if (classData[studentId] === "Absent") {
+                                // Push a placeholder object first, we'll fetch names next
+                                masterAbsenteesData.push({
+                                    classNum: c,
+                                    studentId: studentId,
+                                    status: "Absent",
+                                    date: todayDateStr,
+                                    name: "Loading Name..."
+                                });
+                            }
+                        });
+                    }
+                });
+                allPromises.push(promise);
+            }
+
+            // Once all attendance records are gathered, fetch student names from database
+            Promise.all(allPromises).then(() => {
+                if (masterAbsenteesData.length === 0) {
+                    alert("No absentees found across any class for today!");
+                    return;
+                }
+
+                // Fetch names for each absentee record found
+                let namePromises = masterAbsenteesData.map(item => {
+                    return db.ref(`students/${item.studentId}/name`).once('value').then(nameSnap => {
+                        let fetchedName = nameSnap.val();
+                        if (fetchedName) {
+                            item.name = fetchedName;
+                        } else {
+                            item.name = "Not Uploaded";
+                        }
+                    });
+                });
+
+                Promise.all(namePromises).then(() => {
+                    // Generate CSV content
+                    let csvContent = "data:text/csv;charset=utf-8,";
+                    csvContent += `Class,Student ID,Student Name,Status,Date\n`;
+
+                    masterAbsenteesData.forEach(row => {
+                        // Wrap names in quotes in case they contain commas
+                        let safeName = `"${row.name}"`;
+                        csvContent += `Class ${row.classNum},${row.studentId},${safeName},${row.status},${row.date}\n`;
+                    });
+
+                    // Trigger file download
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", `All_Classes_Absentees_${todayDateStr}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+            }).catch(err => {
+                console.error("Error generating master report:", err);
+                alert("Failed to compile master report. Check console for details.");
+            });
+         }
     </script>
 </body>
 </html>
