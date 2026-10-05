@@ -357,25 +357,38 @@
             });
         }
 
-        function saveProfileData() {
-            const id = document.getElementById("student-id").value.trim();
-            if(!id) { alert("Please load or enter Student ID first"); return; }
-            
-            const data = {
-                name: document.getElementById("student-name").value,
-                password: document.getElementById("student-password").value || "webcap",
-                remarks: document.getElementById("student-remarks").value
-            };
-            
-            db.ref('students/' + id).update(data).then(() => {
-                const msg = document.getElementById("success-msg");
-                msg.style.display = "block";
-                setTimeout(() => msg.style.display = "none", 2500);
-            }).catch((error) => {
-                console.error("Error saving profile data:", error);
-                alert("Failed to save profile. Please check your connection.");
-            });
-        }
+function saveProfileData() {
+    const id = document.getElementById("student-id").value.trim();
+    if(!id) { 
+        alert("Please enter a valid Student ID first!"); 
+        return; 
+    }
+
+    const nameVal = document.getElementById("student-name").value.trim();
+    const passVal = document.getElementById("student-password").value.trim() || "webcap";
+    const remarksVal = document.getElementById("student-remarks").value.trim();
+
+    // Prepare profile payload
+    const profileData = {
+        name: nameVal,
+        password: passVal,
+        remarks: remarksVal
+    };
+
+    // Use .set() instead of .update() to safely create or overwrite the profile node cleanly
+    db.ref('students/' + id).set(profileData)
+        .then(() => {
+            const msg = document.getElementById("success-msg");
+            msg.style.display = "block";
+            setTimeout(() => {
+                msg.style.display = "none";
+            }, 2500);
+        })
+        .catch((error) => {
+            console.error("Firebase Profile Save Error:", error);
+            alert("Failed to save profile: " + error.message);
+        });
+}
 
         function publishEvent() {
             const name = document.getElementById("event-name").value.trim();
