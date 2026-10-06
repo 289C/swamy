@@ -718,14 +718,59 @@ function saveProfileData() {
         }
 
         function submitAttendance() {
+                function submitAttendance() {
             const classNum = document.getElementById("att-class").value;
             if(!classNum) return;
+            
             let attendanceRecords = {};
+            let absentStudents = [];
+            let updates = {}; // Object to handle multi-path updates in Firebase
+
             for(let r = 1; r <= 30; r++) {
                 let studentId = (classNum === "10") ? "10" + (r < 10 ? "0" + r : r) : classNum + r;
-                attendanceRecords[studentId] = document.querySelector(`input[name="att-${studentId}"]:checked`).value;
+                let status = document.querySelector(`input[name="att-${studentId}"]:checked`).value;
+                
+                // 1. Save for class & date view
+                attendanceRecords[studentId] = status;
+                
+                // 2. Save directly inside each student's profile node so the Student Portal can read it instantly
+                updates[`students/${studentId}/attendance/${todayDateStr}`] = status;
+
+                if(status === "Absent") {
+                    absentStudents.push(studentId);
+                }
             }
-            db.ref(`attendance/${classNum}/${todayDateStr}`).set(attendanceRecords).then(() => checkTodayAttendanceStatus());
+
+            // Save class attendance record
+            updates[`attendance/${classNum}/${todayDateStr}`] = attendanceRecords;
+
+            // Push all updates to Firebase simultaneously
+            db.ref().update(updates).then(() => {
+                currentAttendanceCache = attendanceRecords; 
+                
+                const successMsg = document.getElementById("att-success");
+                successMsg.style.display = "block";
+                setTimeout(() => successMsg.style.display = "none", 2500);
+
+                document.getElementById("attendance-active-container").style.display = "none";
+                document.getElementById("attendance-locked-container").style.display = "block";
+
+                const ul = document.getElementById("absentee-ul");
+                ul.innerHTML = "";
+                
+                if(absentStudents.length > 0) {
+                    absentStudents.forEach(id => {
+                        let li = document.createElement("li");
+                        li.innerText = `Student ID: ${id}`;
+                        ul.appendChild(li);
+                    });
+                } else {
+                    ul.innerHTML = `<li>No absentees today (All present!).</li>`;
+                }
+            }).catch(err => {
+                console.error("Error submitting attendance:", err);
+                alert("Failed to submit attendance. Check console.");
+            });
         }
 
         function promptHoliday() {
@@ -740,6 +785,8 @@ function saveProfileData() {
                 for(let r = 1; r <= 30; r++) {
                     let sId = (c === 10) ? "10" + (r < 10 ? "0" + r : r) : c + r.toString();
                     classRecords[sId] = "Holiday";
+                    // Update student node as well for holidays
+                    updates[`students/${sId}/attendance/${todayDateStr}`] = "Holiday";
                 }
                 updates[`attendance/${c}/${todayDateStr}`] = classRecords;
             }
@@ -749,6 +796,7 @@ function saveProfileData() {
                 checkGlobalHoliday();
             });
         }
+
            function downloadAllClassesAbsenteesExcel() {
             // Confirmation or loading alert since it checks multiple classes
             alert("Compiling absentees for all classes. Please wait a moment...");
